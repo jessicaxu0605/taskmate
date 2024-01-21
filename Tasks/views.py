@@ -1,0 +1,98 @@
+from django.shortcuts import render
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from datetime import datetime, timedelta
+from . import models, serializers
+
+
+class AllTasks(APIView):
+    def get(self, request):
+        calendarID = request.query_params.get('calendar', None)     # /all-tasks/?calendar=<value>
+        try:
+            # check calendar actually exists
+            models.Calendar.objects.get(id=calendarID)
+
+            tasks = models.Task.objects.filter(calendarID=calendarID)
+            serializer = serializers.TaskSerializer(tasks, many=True)
+            return Response(serializer.data, status=200)
+        except models.Calendar.DoesNotExist:
+            return Response({'Error: Calendar does not exist'}, status=404)
+
+
+class OneTask(APIView):
+    def get(self, request):
+        taskID = request.query_params.get('task', None)             # /all-tasks/?task=<value>
+
+        try:
+            task = models.Task.objects.get(id=taskID)
+            serializer = serializers.TaskSerializer(task)
+            return Response(serializer.data, status=200)
+        except models.Task.DoesNotExist:
+            return Response({'Error: Task does not exist'}, status=404)
+    def post(self, request):
+        data = request.data
+        data['dueTime'] = datetime.strptime(data.get('dueTime'), '%H:%M:%S').time()
+        data['dueDate'] = datetime.strptime(data.get('dueDate'), '%Y-%m-%d').date()
+        duration_parts = data.get('duration').split(':')
+        data['duration'] = timedelta(hours=int(duration_parts[0]), minutes=int(duration_parts[1]), seconds=int(duration_parts[2]))
+
+        serializer = serializers.TaskSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'Success'}, status=201)
+        else:
+            return Response(serializer.errors, status=400)
+
+
+    def delete(self, request):
+        taskID = request.query_params.get('task', None)
+        try:
+            task = models.Task.objects.get(id=taskID)
+            task.delete()
+            return Response({'Success'}, status=200)
+        except models.Task.DoesNotExist:
+            return Response({'Error: Task does not exist'}, status=404)
+
+    def put(self, request):
+        taskID = request.data.get('taskID')
+        newCalendarID = request.data.get('newCalendar')           #foreign key
+        newData = request.data.get('newData')
+
+
+        try:
+            task = models.Task.objects.get(id=taskID)
+            # if changing calendar, check calendarID is valid, then 
+            if newCalendarID is not None:
+                setattr(task, 'calendarID', models.Calendar.objects.get(id=newCalendarID))
+            for field, value in newData.items():
+                if value is not None:
+
+                    # fix formatting for certain fields
+                    if field in ['dueTime', 'startTime', 'endTime']:
+                        value = datetime.strptime(value, '%H:%M:%S').time()
+                    elif field in ['dueDate', 'startDate']:
+                        value = datetime.strptime(value, '%Y-%m-%d').date()
+                    elif field == 'duration':
+                        duration_parts = value.split(':')
+                        value = timedelta(hours=int(duration_parts[0]), minutes=int(duration_parts[1]), seconds=int(duration_parts[2]))
+
+                    setattr(task, field, value)
+
+            task.save()
+            return Response({'Success'}, status=200)
+        except models.Calendar.DoesNotExist:
+            return Response({'Error: Selected calendar does not exist'}, status=404)
+        except models.Task.DoesNotExist:
+            return Response({'Error: Task does not exist'}, status=404)
+
+
+class NewCalendar(APIView):
+    def post(self, request):
+        data = request.data
+        serializer = serializers.CalendarSerializer(data=data)
+        if (serializer.is_valid()):
+            serializer.save()
+            return Response({'Success'}, status=201)
+        else:
+            return Response(serializer.errors, status=400)
+
