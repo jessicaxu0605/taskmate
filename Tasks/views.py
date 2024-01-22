@@ -7,7 +7,7 @@ from . import models, serializers
 
 
 class AllTasks(APIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
     def get(self, request):
         calendarID = request.query_params.get('calendar', None)     # /all-tasks/?calendar=<value>
         try:
@@ -22,7 +22,7 @@ class AllTasks(APIView):
 
 
 class OneTask(APIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
     def get(self, request):
         taskID = request.query_params.get('task', None)             # /all-tasks/?task=<value>
 
@@ -92,11 +92,11 @@ class OneTask(APIView):
 
 
 class NewCalendar(APIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
     def post(self, request):
         data = request.data
-        user = request.user
-        data.update({'user': user})
+        # user = request.user
+        # data.update({'user': user})
         serializer = serializers.CalendarSerializer(data=data)
         if (serializer.is_valid()):
             serializer.save()
