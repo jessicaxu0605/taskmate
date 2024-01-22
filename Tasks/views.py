@@ -1,11 +1,13 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from datetime import datetime, timedelta
 from . import models, serializers
 
 
 class AllTasks(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         calendarID = request.query_params.get('calendar', None)     # /all-tasks/?calendar=<value>
         try:
@@ -20,6 +22,7 @@ class AllTasks(APIView):
 
 
 class OneTask(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         taskID = request.query_params.get('task', None)             # /all-tasks/?task=<value>
 
@@ -31,7 +34,9 @@ class OneTask(APIView):
             return Response({'Error: Task does not exist'}, status=404)
     def post(self, request):
         data = request.data
-        data['dueTime'] = datetime.strptime(data.get('dueTime'), '%H:%M:%S').time()
+        # this field has default value of 23:00:00 if not specified
+        if data.get('dueTime'):
+            data['dueTime'] = datetime.strptime(data.get('dueTime'), '%H:%M:%S').time()
         data['dueDate'] = datetime.strptime(data.get('dueDate'), '%Y-%m-%d').date()
         duration_parts = data.get('duration').split(':')
         data['duration'] = timedelta(hours=int(duration_parts[0]), minutes=int(duration_parts[1]), seconds=int(duration_parts[2]))
@@ -87,8 +92,11 @@ class OneTask(APIView):
 
 
 class NewCalendar(APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request):
         data = request.data
+        user = request.user
+        data.update({'user': user})
         serializer = serializers.CalendarSerializer(data=data)
         if (serializer.is_valid()):
             serializer.save()

@@ -1,9 +1,9 @@
 from django.db import models
 from django.utils import timezone
-# from django.contrib.auth.models import AbstractUser, User, BaseUserManager
 from Users.models import User
 
 class Calendar(models.Model):
+    
     owner = models.ForeignKey(User, on_delete=models.PROTECT)
     sharedUsers = models.ManyToManyField(User, through='Calendar2User', related_name='ownedCalendars')
     name = models.CharField(max_length=100)
@@ -17,14 +17,12 @@ class Task(models.Model):
     # mandatory
     calendarID = models.ForeignKey(Calendar, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
-    dateCreated = models.DateTimeField(auto_now_add=True)
-
-    # time info
+    dateCreated = models.DateTimeField(auto_now_add=True)                       # auto
     dueDate = models.DateField(default=timezone.now)
-    dueTime = models.TimeField(default='23:59:59')
+    dueTime = models.TimeField(default='23:59:59')                              # default exists
+    duration = models.DurationField()                      # HH:MM:SS format
 
-    duration = models.DurationField()                       # HH:MM:SS format
-
+    # add later
     startDate = models.DateField(null=True, blank=True)
     startTime = models.TimeField(null=True, blank=True)
     endTime = models.TimeField(null=True, blank=True)

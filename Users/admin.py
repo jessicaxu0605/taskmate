@@ -2,6 +2,6 @@ from django.contrib import admin
 from . import models
 
 class UserAdmin(admin.ModelAdmin):
-    list_display=('email',)
+    list_display=('email', 'id')
 
 admin.site.register(models.User, UserAdmin)
