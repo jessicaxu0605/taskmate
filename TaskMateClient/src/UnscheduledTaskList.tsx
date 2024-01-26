@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 // import axios from 'axios';
-import axios from './axiosConfig.js';
-import UnscheduledTaskCard from './UnscheduledTaskCard';
+import axios from './axiosConfig';
+import TaskCard from './TaskCard';
 
 type rawTaskFormat = {"id":1,
     "name": string,
@@ -21,10 +21,10 @@ type rawTaskFormat = {"id":1,
 export default function UnscheduledTaskList() {
     const [dataFetched, setDataFetched] = React.useState<boolean>(false)
     const [tasksList, setTasksList] = React.useState<rawTaskFormat[]>([])
+    const thisElemRef = React.useRef<HTMLDivElement>(null);
 
     // TEMP:
     const calendarID = 1;
-
 
     React.useEffect(()=>{
         console.log("Start")
@@ -38,14 +38,30 @@ export default function UnscheduledTaskList() {
         console.log("End")
     }, [])
 
+    function handleDrop(e: React.DragEvent<HTMLDivElement>) {
+        const cardID = e.dataTransfer.getData('cardID');
+        const card = document.getElementById(cardID);
+        if (!card) return;
+
+        e.dataTransfer.setData('dropType', 'unscheduled');
+
+        if(!thisElemRef.current) return;
+        thisElemRef.current.appendChild(card);
+    }
+
+    function handleDragOver(e: React.DragEvent<HTMLDivElement>) {
+        e.preventDefault();
+    }
+
     //fetch data
     return (
-        <div>
-            <ul>
-                {/* {dataFetched
-                ? tasksList.map((val)=><UnscheduledTaskCard id={val.id} name={val.name} dueTime={val.dueTime} dueDate={val.dueDate} duration={val.duration}/>) 
-                : null} */}
-            </ul>
+        <div ref={thisElemRef} id='unscheduled'
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+        >
+                {dataFetched ? tasksList.map((val, index)=>
+                    <TaskCard key={index} id={val.id} name={val.name} dueTime={val.dueTime} dueDate={val.dueDate} duration={val.duration} display={'false'}/>
+                ) : null}
         </div>
     )
 }

@@ -20,7 +20,7 @@ function formatDateTime(date: string, time: string) {
 
 function formatTime(time: string) {
     const time_parts = time.split(":")
-    return {hour: time_parts[0], minute: time_parts[1]}
+    return {hour: parseInt(time_parts[0]), minute: time_parts[1]}
 }
 
 export {formatDateTime, formatTime};
