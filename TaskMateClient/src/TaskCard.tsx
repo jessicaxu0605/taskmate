@@ -40,7 +40,6 @@ export default function TaskCard({  id, name, dueTime, dueDate, duration, displa
         const target = e.target as HTMLElement;
         if (target instanceof HTMLElement) {
             e.dataTransfer.setData('cardID', target.id);
-            e.dataTransfer.setData('offsetY', `${e.nativeEvent.offsetY}`);
             e.dataTransfer.setDragImage(target, dragOffset, dragOffset);
             setIsDragging(true);
             //hide the original card, using set timeout to prevent the "dragged" version from being hidden too

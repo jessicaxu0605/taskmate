@@ -21,6 +21,32 @@ class AllTasks(APIView):
             return Response({'Error: Calendar does not exist'}, status=404)
 
 
+class AllUnscheduledTasks(APIView):
+    def get(self, request):
+        calendarID = request.query_params.get('calendar', None)     # /all-unscheduled-tasks/?calendar=<value>
+        try:
+            # check calendar actually exists
+            models.Calendar.objects.get(id=calendarID)
+            tasks = models.Task.objects.filter(calendarID=calendarID, startTime__isnull=True).order_by('dueDate')
+            serializer = serializers.TaskSerializer(tasks, many=True)
+            return Response(serializer.data, status=200)
+        except:
+            return Response({'Error: Calendar does not exist'}, status=404)
+
+
+class AllScheduledTasks(APIView):
+    def get(self, request):
+        calendarID = request.query_params.get('calendar', None)
+        try:
+            # check calendar actually exists
+            models.Calendar.objects.get(id=calendarID)
+            tasks = models.Task.objects.filter(calendarID=calendarID, startTime__isnull=False).order_by('startTime')
+            serializer = serializers.TaskSerializer(tasks, many=True)
+            return Response(serializer.data, status=200)
+        except:
+            return Response({'Error: Calendar does not exist'}, status=404)
+
+
 class OneTask(APIView):
     # permission_classes = [IsAuthenticated]
     def get(self, request):
@@ -32,6 +58,8 @@ class OneTask(APIView):
             return Response(serializer.data, status=200)
         except models.Task.DoesNotExist:
             return Response({'Error: Task does not exist'}, status=404)
+        
+
     def post(self, request):
         data = request.data
         # this field has default value of 23:00:00 if not specified
@@ -71,18 +99,18 @@ class OneTask(APIView):
                 setattr(task, 'calendarID', models.Calendar.objects.get(id=newCalendarID))
             for field, value in newData.items():
                 if value is not None:
-
-                    # fix formatting for certain fields
-                    if field in ['dueTime', 'startTime', 'endTime']:
-                        value = datetime.strptime(value, '%H:%M:%S').time()
-                    elif field in ['dueDate', 'startDate']:
-                        value = datetime.strptime(value, '%Y-%m-%d').date()
-                    elif field == 'duration':
-                        duration_parts = value.split(':')
-                        value = timedelta(hours=int(duration_parts[0]), minutes=int(duration_parts[1]), seconds=int(duration_parts[2]))
-
-                    setattr(task, field, value)
-
+                    if value == 'null':
+                        setattr(task, field, None)
+                    else:
+                        # fix formatting for certain fields
+                        if field in ['dueTime', 'startTime', 'endTime']:
+                            value = datetime.strptime(value, '%H:%M:%S').time()
+                        elif field in ['dueDate', 'startDate']:
+                            value = datetime.strptime(value, '%Y-%m-%d').date()
+                        elif field == 'duration':
+                            duration_parts = value.split(':')
+                            value = timedelta(hours=int(duration_parts[0]), minutes=int(duration_parts[1]), seconds=int(duration_parts[2]))
+                        setattr(task, field, value)
             task.save()
             return Response({'Success'}, status=200)
         except models.Calendar.DoesNotExist:
