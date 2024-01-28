@@ -2,7 +2,7 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from . import models, serializers
 
 
@@ -25,7 +25,6 @@ class AllUnscheduledTasks(APIView):
     def get(self, request):
         calendarID = request.query_params.get('calendar', None)     # /all-unscheduled-tasks/?calendar=<value>
         try:
-            # check calendar actually exists
             models.Calendar.objects.get(id=calendarID)
             tasks = models.Task.objects.filter(calendarID=calendarID, startTime__isnull=True).order_by('dueDate')
             serializer = serializers.TaskSerializer(tasks, many=True)
@@ -38,9 +37,24 @@ class AllScheduledTasks(APIView):
     def get(self, request):
         calendarID = request.query_params.get('calendar', None)
         try:
-            # check calendar actually exists
             models.Calendar.objects.get(id=calendarID)
             tasks = models.Task.objects.filter(calendarID=calendarID, startTime__isnull=False).order_by('startTime')
+            serializer = serializers.TaskSerializer(tasks, many=True)
+            return Response(serializer.data, status=200)
+        except:
+            return Response({'Error: Calendar does not exist'}, status=404)
+
+class ScheduledTasksByWeek(APIView):
+    def get(self, request):
+        calendarID = request.query_params.get('calendar', None)
+        startOfWeekParam = request.query_params.get('startofweek', None)
+        startOfWeekParts = startOfWeekParam.split('-')
+        startOfWeek = date(int(startOfWeekParts[0]), int(startOfWeekParts[1]), int(startOfWeekParts[2]))
+        endOfWeek = startOfWeek + timedelta(days=7)
+
+        try:
+            models.Calendar.objects.get(id=calendarID)
+            tasks = models.Task.objects.filter(calendarID=calendarID, startDate__isnull=False, startDate__range=[startOfWeek, endOfWeek]).order_by('startDate', 'startTime')
             serializer = serializers.TaskSerializer(tasks, many=True)
             return Response(serializer.data, status=200)
         except:
