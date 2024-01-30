@@ -2,10 +2,15 @@ import React from 'react'
 import axios from './config/axiosConfig';
 import { TIME_SLOT_HEIGHT } from './utils/constants';
 import {  LatestDropContext, DropContextData  } from './App';
+import {  rawTaskFormat  } from './WeeklyView';
+import TaskCard from './TaskCard';
 
 type DayBoardProps = {
     date:Date,
-    id:string
+    id:string,
+    tasksList: rawTaskFormat[];
+    dataFetched: boolean;
+    shiftWeeks: (num: number)=>void;
 }
 
 type DayHeaderProps = {
@@ -24,7 +29,7 @@ export function DayHeader({ date }:DayHeaderProps) {
     )
 }
 
-export function DayBoard({ date, id }:DayBoardProps) {
+export function DayBoard({ date, id, tasksList, dataFetched, shiftWeeks }:DayBoardProps) {
     const thisElemRef = React.useRef<HTMLDivElement>(null);
     const dropContext = React.useContext(LatestDropContext);
 
@@ -58,16 +63,25 @@ export function DayBoard({ date, id }:DayBoardProps) {
 
     //drag and drop:
     function handleDrop(e: React.DragEvent<HTMLDivElement>) {
+        dropContext.setDrop({  completion: 'dropped'  });
         e.preventDefault();
         const taskCardID = e.dataTransfer.getData('cardID');
         const taskCard = document.getElementById(taskCardID); 
-        if (!taskCard) return;
+        if (!taskCard) {
+            dropContext.setDrop({  completion: 'failed'  })
+            return;
+        }
 
         e.dataTransfer.setData('dropType', 'scheduled');
 
         //number of 15 minute time slots from the top of the board
+        
         const startTimeIn15Mins = getStartTime(e);
-        if(!startTimeIn15Mins) return;
+        if(startTimeIn15Mins == null) {
+            dropContext.setDrop({  completion: 'failed'  })
+            return;
+        }
+        
         
         const reqBody = formatReqBody(startTimeIn15Mins, taskCard);
         axios.put('/app/task/', reqBody).then(
@@ -82,7 +96,10 @@ export function DayBoard({ date, id }:DayBoardProps) {
                 taskCard.style.display="block";
 
                 //append child
-                if (!thisElemRef.current) return;
+                if (!thisElemRef.current) {
+                    dropContext.setDrop({  completion: 'failed'  })
+                    return;
+                }
                 thisElemRef.current.appendChild(taskCard);
 
                 //update dropContext to complete
@@ -99,12 +116,22 @@ export function DayBoard({ date, id }:DayBoardProps) {
         e.preventDefault();
     }
 
+    //clear children before component re-renders--prevents removeChild error on unmount since drag-and-drop elements are not tracked in React Dom
+    React.useEffect(()=>{
+        console.log("here");
+        if (!thisElemRef.current) return;
+        thisElemRef.current.innerHTML='';
+    }, [shiftWeeks]);
+
     return(
         <div ref={thisElemRef} id={id} 
             onDrop={handleDrop}
             onDragOver={handleDragOver}
             style={{height:"1536px"}}
-            className={`border-slate-200 border-x relative`}
-        ></div>
+            className={`border-slate-200 border-x relative`}>
+            {dataFetched ? tasksList.map((val, index)=>
+                <TaskCard key={index} id={val.id} name={val.name} dueTime={val.dueTime} dueDate={val.dueDate} duration={val.duration} isScheduledDefault={true} startTime={val.startTime}/>
+            ) : null}
+        </div>
     )
 }
