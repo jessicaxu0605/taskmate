@@ -1,7 +1,7 @@
 import React from 'react';
 import { formatDateTime, formatTime } from './utils/FormattingFunctions';
 import { TIME_SLOT_HEIGHT } from './utils/constants';
-import {  LatestDropContext, DropContextData  } from './App';
+import {  LatestDropContext  } from './App';
 
 type TaskData = {
     id: number,
@@ -11,11 +11,12 @@ type TaskData = {
     duration: string,
     isScheduledDefault: boolean,
     startTime: string | null,
+    selfDestruct: (id: number, startTime: string|null)=>void;
 }
 
 const dragOffset = 16;
 
-export default function TaskCard({  id, name, dueTime, dueDate, duration, isScheduledDefault, startTime  }: TaskData) {
+export default function TaskCard({  id, name, dueTime, dueDate, duration, isScheduledDefault, startTime, selfDestruct  }: TaskData) {
     const thisElemRef = React.useRef<HTMLDivElement>(null);
     const dropContext = React.useContext(LatestDropContext);
     const [isScheduled, setIsScheduled] = React.useState<boolean>(isScheduledDefault);
@@ -28,24 +29,33 @@ export default function TaskCard({  id, name, dueTime, dueDate, duration, isSche
     function handleDragStart(e: React.DragEvent<HTMLDivElement>) {
         if (!thisElemRef.current) return;
         const target = thisElemRef.current;
+        console.log(target.id);
 
         dropContext.setDrop({  completion: 'dragging'  });
         setIsDragging(true);
-        setIsScheduled(true);
         
         if (!isScheduled) {
             target.style.position = "relative";
             target.style.left = `${e.clientX - 32 - dragOffset}px`;
         }
 
-        e.dataTransfer.setData('cardID', target.id);        
+        e.dataTransfer.setData('cardID', target.id); 
+        e.dataTransfer.setData('id', id.toString());       
+        e.dataTransfer.setData('name', name);
+        e.dataTransfer.setData('dueTime', dueTime);
+        e.dataTransfer.setData('dueDate', dueDate);
+        e.dataTransfer.setData('duration', duration);
+        e.dataTransfer.setData('slotsRequired', slotsRequired.toString());
         e.dataTransfer.setDragImage(target, dragOffset, dragOffset);
 
-        //hide the original card, using set timeout to prevent the "dragged" version from being hidden too
+        // hide the original card, using set timeout to prevent the "dragged" version from being hidden too
         setTimeout(()=>{
+            console.log(target.id);
             target.style.display="none";
             target.style.left = "0";
         }, 0)
+        
+        e.stopPropagation;
     };
 
     //prevent cards from being dropped on top of each other
@@ -53,10 +63,13 @@ export default function TaskCard({  id, name, dueTime, dueDate, duration, isSche
         e.stopPropagation;
     }
 
-    function handleDragEnd() {
+    function handleDragEnd(e: React.DragEvent<HTMLDivElement>) {
         if (dropContext.drop.completion != 'dropped') {
             dropContext.setDrop({  completion: 'failed'  });
+        } else {
+            selfDestruct(id, startTime);
         }
+        e.stopPropagation;
     }
 
     React.useEffect(()=>{
@@ -64,19 +77,11 @@ export default function TaskCard({  id, name, dueTime, dueDate, duration, isSche
         if (dropContext.drop.completion == 'failed') {
             if(!thisElemRef.current) return;
             thisElemRef.current.style.display='block';
-            return;
         }
         if (dropContext.drop.completion == 'complete') {
-            if (dropContext.drop.location == 'UnscheduledTaskList') {
-                setIsScheduled(false);
-            } else if (dropContext.drop.location == 'WeeklyView') {
-                setIsScheduled(true);
-            }
         }
         setIsDragging(false);        
     }, [dropContext.drop])
-
-
 
 
     
@@ -84,9 +89,9 @@ export default function TaskCard({  id, name, dueTime, dueDate, duration, isSche
         const formattedStartTime = formatTime(startTime as string);     //function will only be called if startTime is defined
         const slotsRequired = formattedStartTime.hour * 4 + parseInt(formattedStartTime.minute) / 15;
         const top = slotsRequired * TIME_SLOT_HEIGHT;
-        console.log(top);
         return `${top}px`;
     }
+
     return (
         <div 
             id={`TaskCard${id}`}
@@ -97,16 +102,17 @@ export default function TaskCard({  id, name, dueTime, dueDate, duration, isSche
             onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
             style={{
-                height: isScheduled ? `${slotsRequired * TIME_SLOT_HEIGHT}px` : 'auto',
+                height: isScheduled || isDragging ? `${slotsRequired * TIME_SLOT_HEIGHT}px` : 'auto',
                 width: isDragging ? '11vw' : (isScheduled ? '100%' : 'auto'),
                 top: isScheduledDefault ? getTop() : '0',
-                position: isScheduledDefault ? 'absolute' : 'static'
+                position: isScheduledDefault ? 'absolute' : 'static',
+                display: 'block'
             }}
-            className={`${isScheduled ? `px-1` :`p-1`} bg-slate-300 br-10 text-left rounded-lg border-slate-400 border-2 z-10 cursor-grab overflow-hidden`}>
-            <div className={`${isScheduled ?  '' :  `grid grid-cols-3`} overflow-hidden`}>
-                <h3 style={isScheduled ? {height:"100%"} : {}}className='font-bold text-sm'>{name}</h3>
-                <p style={isScheduled ? {display:"none"} : {}} className='text-xs'>due <strong>{formattedDueDateTime.date}</strong> at <strong>{formattedDueDateTime.time}</strong></p>
-                <p style={isScheduled ? {display:"none"} : {}} className='text-xs'>takes <strong>{`${formattedDuration.hour}:${formattedDuration.minute}`}</strong> to complete</p>
+            className={`${isScheduled || isDragging ? `px-1` :`p-1`} bg-slate-300 br-10 text-left rounded-lg border-slate-400 border-2 z-10 cursor-grab overflow-hidden`}>
+            <div className={`${isScheduled || isDragging ?  '' :  `grid grid-cols-3`} overflow-hidden`}>
+                <h3 style={isScheduled || isDragging ? {height:"100%"} : {}}className='font-bold text-sm'>{name}</h3>
+                <p style={isScheduled || isDragging ? {display:"none"} : {}} className='text-xs'>due <strong>{formattedDueDateTime.date}</strong> at <strong>{formattedDueDateTime.time}</strong></p>
+                <p style={isScheduled || isDragging ? {display:"none"} : {}} className='text-xs'>takes <strong>{`${formattedDuration.hour}:${formattedDuration.minute}`}</strong> to complete</p>
             </div>
         </div>
     );

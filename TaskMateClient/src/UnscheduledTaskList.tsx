@@ -1,23 +1,8 @@
 import React, { useEffect } from 'react';
-// import axios from 'axios';
 import axios from './config/axiosConfig';
 import TaskCard from './TaskCard';
-import {  LatestDropContext, DropContextData  } from './App'
-
-type rawTaskFormat = {
-    "id": number,
-    "name": string,
-    "dateCreated": string, //ISODateString
-    "dueDate": string,
-    "dueTime": string,
-    "duration": string,
-    "startDate": string | null,
-    "startTime": string | null,
-    "endTime": string | null,
-    "eventTypeID": string | null,       //to be implemented
-    "properties": string | null,        //to be implemented
-    "calendarID": number
-}
+import {  LatestDropContext  } from './App';
+import {  rawTaskFormat  } from './utils/globalTypes';
 
 
 function UnscheduledTaskBoard() {
@@ -40,41 +25,36 @@ function UnscheduledTaskBoard() {
 
     function handleDrop(e: React.DragEvent<HTMLDivElement>) {
         dropContext.setDrop({  completion: 'dropped'  });
-        const taskCardID = e.dataTransfer.getData('cardID');        
-        const taskCard = document.getElementById(taskCardID);
-        if (!taskCard) {
-            dropContext.setDrop({  completion: 'failed'  })
-            return;
-        }
-
         const reqBody = {
-            "taskID": parseInt(taskCardID.slice(8)),
+            "taskID": parseInt(e.dataTransfer.getData('id')),
             "newData":{
                 "startTime": 'null',
                 "startDate": 'null'
             }
-            
+        }
+        const newTask = {
+            "id": parseInt(e.dataTransfer.getData('id')),
+            "name": e.dataTransfer.getData('name'),
+            "dateCreated": null,
+            "dueDate": e.dataTransfer.getData('dueDate'),
+            "dueTime": e.dataTransfer.getData('dueTime'),
+            "duration": e.dataTransfer.getData('duration'),
+            "startDate": null,
+            "startTime": null,
+            "endTime": null,
+            "eventTypeID": null,       //to be implemented
+            "properties": null,        //to be implemented
+            "calendarID": null,        //field not needed here, only relevant for fetching
         }
         axios.put('/app/task/', reqBody).then(
-            ()=>{
-                if(!thisElemRef.current) {
-                    dropContext.setDrop({  completion: 'failed'  })
-                    return;
-                }
-                thisElemRef.current.appendChild(taskCard);
-                taskCard.style.top = '0';
-                taskCard.style.top = '0';
-                taskCard.style.position="static";
-                taskCard.style.display="block";
-        
-                const dropContextData:DropContextData = {
-                    completion: 'complete',
-                    location: 'UnscheduledTaskList'
-                }
-                dropContext.setDrop(dropContextData);
+            ()=>{                
+                const newTasksList = tasksList;
+                newTasksList.push(newTask);
+                setTasksList(newTasksList);
+
+                dropContext.setDrop({  completion: 'complete'  });
             }
         );
-        
     }
     
     function handleDragOver(e: React.DragEvent<HTMLDivElement>) {
@@ -82,14 +62,23 @@ function UnscheduledTaskBoard() {
     }
 
 
-    //fetch data
     return (
         <div ref={thisElemRef} id='unscheduled' className='bg-slate-100 min-h-8'
             onDrop={handleDrop}
             onDragOver={handleDragOver}
         >
             {dataFetched ? tasksList.map((val, index)=>
-                <TaskCard key={index} id={val.id} name={val.name} dueTime={val.dueTime} dueDate={val.dueDate} duration={val.duration} isScheduledDefault={false} startTime={null}/>
+                <TaskCard 
+                    key={index} 
+                    id={val.id} 
+                    name={val.name} 
+                    dueTime={val.dueTime} 
+                    dueDate={val.dueDate} 
+                    duration={val.duration} 
+                    isScheduledDefault={false} 
+                    startTime={null} 
+                    selfDestruct={()=>{}}
+                    />
             ) : null}
         </div>
     )

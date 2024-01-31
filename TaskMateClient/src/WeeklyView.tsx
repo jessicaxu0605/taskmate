@@ -3,7 +3,7 @@ import axios from './config/axiosConfig';
 import { TIME_SLOT_HEIGHT } from './utils/constants';
 import {  DayHeader, DayBoard  } from './DayColumn'
 import {  RightArrow, LeftArrow  } from './assets/RightArrow';
-
+import {  rawTaskFormat  } from './utils/globalTypes';
 
 function GridBackground() {
     function renderGridLines() {
@@ -31,7 +31,7 @@ function WeekSelectorArrow({ weekChangeDirection, shiftWeeksFunc  }: WeekSelecto
         shiftWeeksFunc(weekChangeDirection);
     }
     return (
-    <div className='rounded-full bg-red-800 h-10 w-10 flex flex-row justify-center items-center'
+    <div className='rounded-full bg-red-800 h-8 w-8 flex flex-row justify-center items-center'
         onClick={handleClick}>
             {weekChangeDirection == 1 ? <RightArrow/> : <LeftArrow/>}
     </div>
@@ -39,25 +39,6 @@ function WeekSelectorArrow({ weekChangeDirection, shiftWeeksFunc  }: WeekSelecto
    
 }
 
-
-export type rawTaskFormat = {
-    "id": number,
-    "name": string,
-    "dateCreated": string, //ISODateString
-    "dueDate": string,
-    "dueTime": string,
-    "duration": string,
-    "startDate": string | null,
-    "startTime": string | null,
-    "endTime": string | null,
-    "eventTypeID": string | null,       //to be implemented
-    "properties": string | null,        //to be implemented
-    "calendarID": number
-}
-
-type WeeklyViewProps = {
-    weeksFromToday1:number
-}
 export default function WeeklyView() {
     const [weeksFromToday, setWeeksFromToday] = React.useState<number>(0);
     const [weekDays, setWeekDays] = React.useState<Date[]>([]);
@@ -70,7 +51,6 @@ export default function WeeklyView() {
 
     React.useEffect(()=>{
         setDataFetched(false);
-        // setTimeout(()=>{}, 10000)
         const startOfWeek = weekDays[0];
         if (!startOfWeek) return;
         const startOfWeekParam = startOfWeek.toISOString().slice(0, 10);
@@ -86,7 +66,6 @@ export default function WeeklyView() {
                         taskIndex++;
                     }
                 }
-                console.log(tempTasksByDay);
                 setTasksByDay(tempTasksByDay);
                 setDataFetched(true);
             }
@@ -100,14 +79,12 @@ export default function WeeklyView() {
     // using actual Date object so I don't have to deal w crossing over months
     function setWeekDaysState(weeksFromToday: number) { 
         const today = new Date();
-        const dayOfWeek = today.getDay();
-        const startOfWeek = new Date(today);
-        startOfWeek.setDate(today.getDate() - dayOfWeek - (7 * weeksFromToday))
+        const todayDayOfWeek = today.getDay();
 
         const weekDaysTemp = []
         for (let i = 0; i < 7; i++) {
             const date = new Date();
-            date.setDate(startOfWeek.getDate() + i);
+            date.setDate(today.getDate() - todayDayOfWeek  + i + (7 * weeksFromToday));
             weekDaysTemp.push(date);
         }
         setWeekDays(weekDaysTemp);
@@ -116,22 +93,24 @@ export default function WeeklyView() {
     function renderTimeLabels() {
         const timeLabels = [];
         timeLabels.push(<div key='empty' style={{height:`calc(${4*TIME_SLOT_HEIGHT}px - 1rem)`}}></div>)
-        for (let i = 1; i <= 12; i++) {
+        for (let i = 1; i <= 11; i++) {
             timeLabels.push(<div key={`t${i}`} style={{height:`${4*TIME_SLOT_HEIGHT}px`}}>{`${i}:00 AM`}</div>)
         }
-        for (let i = 1; i <= 12; i++) {
+        timeLabels.push(<div key={`t${12}`} style={{height:`${4*TIME_SLOT_HEIGHT}px`}}>{`${12}:00 PM`}</div>)
+        for (let i = 1; i <= 11; i++) {
             timeLabels.push(<div key={`t${i+12}`} style={{height:`${4*TIME_SLOT_HEIGHT}px`}}>{`${i}:00 PM`}</div>)
         }
+        timeLabels.push(<div key={`t${24}`} style={{height:`${4*TIME_SLOT_HEIGHT}px`}}>{`${12}:00 AM`}</div>)
         return timeLabels;
     }
 
 
     return (
     <>
-        <div className='flex flex-row justify-between py-2 px-8'>
-        <WeekSelectorArrow weekChangeDirection={-1} shiftWeeksFunc={shiftWeeks}/>
-        <h2 className='p-2 text-xl font-bold'>{weekDays[0] ? `${weekDays[0].toDateString()}-${weekDays[6].toDateString()}`: ''}</h2>
-        <WeekSelectorArrow weekChangeDirection={1} shiftWeeksFunc={shiftWeeks}/>
+        <div className='flex flex-row justify-center align-middle py-4 px-8'>
+            <WeekSelectorArrow weekChangeDirection={-1} shiftWeeksFunc={shiftWeeks}/>
+            <h2 style={{width: '28rem'}} className='text-xl font-bold'>{weekDays[0] ? `Week of ${weekDays[0].toDateString().slice(4)} – ${weekDays[6].toDateString().slice(4)}`: ''}</h2>
+            <WeekSelectorArrow weekChangeDirection={1} shiftWeeksFunc={shiftWeeks}/>
         </div>
         <div className='border-slate-200 border'>
             <div className={`grid grid-cols-8 border-slate-200 overflow-y-scroll h-1/2 relative`}>
@@ -147,7 +126,7 @@ export default function WeeklyView() {
                 <div className='text-right pr-2 bg-white z-10 relative'>{renderTimeLabels()}</div>
                 {weekDays.map((val, index)=> 
                 <div key={index}>
-                    <DayBoard id={`DayBoard${index}`} date={val} tasksList={tasksByDay[index]} dataFetched={dataFetched} shiftWeeks={shiftWeeks}/>
+                    <DayBoard id={`DayBoard${index}`} date={val} defaultTasksList={tasksByDay[index]} dataFetched={dataFetched} shiftWeeks={shiftWeeks}/>
                 </div>)}
             </div> 
         </div>  
