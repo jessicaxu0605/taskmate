@@ -54,7 +54,7 @@ class ScheduledTasksByWeek(APIView):
 
         try:
             models.Calendar.objects.get(id=calendarID)
-            tasks = models.Task.objects.filter(calendarID=calendarID, startDate__isnull=False, startDate__range=[startOfWeek, endOfWeek]).order_by('startDate', 'startTime')
+            tasks = models.Task.objects.filter(calendarID=calendarID, startDate__isnull=False, startDate__range=[startOfWeek, endOfWeek]).order_by('scheduledDateTime')
             serializer = serializers.TaskSerializer(tasks, many=True)
             return Response(serializer.data, status=200)
         except:
