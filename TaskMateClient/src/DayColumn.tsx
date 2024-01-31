@@ -34,6 +34,8 @@ export function DayBoard({ date, id, defaultTasksList, dataFetched, shiftWeeks }
     const [tasksList, setTasksList] = React.useState(defaultTasksList);
     const filledTimeSlots = React.useRef(Array.from({ length: 96 }, () => 0));
 
+
+    
     React.useEffect(()=>{
         if (dataFetched) {
             setTasksList(defaultTasksList);
@@ -49,63 +51,6 @@ export function DayBoard({ date, id, defaultTasksList, dataFetched, shiftWeeks }
     const dropContext = React.useContext(LatestDropContext);
 
     // helper functions:
-
-    function findTaskByTime(startTime: string): number {
-        let start = 0;
-        let end = tasksList.length;
-        let mid = 0;
-        let counter = 0;
-        while (start <= end) {
-            if (counter > 10) break;
-            mid = Math.floor((start + end)/2);
-            const midStartTime = tasksList[mid].startTime as string;
-            //lexigaphical comparison works here to compare time in format "HH:MM:SS"!
-            if (midStartTime == startTime)
-                return mid;
-            else if (midStartTime < startTime ) {
-                start = mid;
-            } else 
-                end = mid;
-            counter++;
-        }
-        return -1; //not found
-    }
-
-    function getAvailTimeIndex(startTime: string, endTime: string) {
-        console.log("here");
-        //if tasksList is empty, simply add at index 0;
-        if (tasksList.length == 0) return 0;
-
-        //1. find preceding task (task whose startTime is closest, yet still before the new startTime)
-        let start = 0;
-        let end = tasksList.length;
-        let mid = -1;
-        while (start < end) {
-            mid = Math.floor((start + end)/2);
-            if (mid==start) break;
-
-            const midStartTime = tasksList[mid].startTime as string;
-            //lexigaphical comparison works here to compare time in format "HH:MM:SS"!
-            if (midStartTime <= startTime ) {
-                start = mid;
-            } else 
-                end = mid;
-        }
-        const precedingTaskIndex = mid;
-       
-        //2. check if precedingTask.endTime is after newTask.startTime
-        if (mid >= 0 &&                                                         //skip on edge case: no preceding task
-            tasksList[precedingTaskIndex].endTime as string > startTime) {
-                return -1;  //not available
-        }
-        //3. check if proceedingTask.startTime is before newTask.endTime
-        if (precedingTaskIndex + 1 < tasksList.length &&                        //skip on edge case: preceding task is last element in array
-            tasksList[precedingTaskIndex + 1].startTime as string < endTime) {
-                return -1;  //not available
-        }
-        console.log(precedingTaskIndex);
-        return precedingTaskIndex;
-    }
 
     //get startTime depending on number of 15 min slots from the top of the card to the top of the board
     function getStartTime(e: React.DragEvent<HTMLDivElement>) {
@@ -147,13 +92,6 @@ export function DayBoard({ date, id, defaultTasksList, dataFetched, shiftWeeks }
         const startTime = formatTime(startTimeIn15Mins);
         const endTime = formatTime(endTimeIn15Mins);
 
-        const availableTimeIndex = getAvailTimeIndex(startTime, endTime);
-        console.log("time index" + availableTimeIndex);
-        if (availableTimeIndex < 0) {
-            dropContext.setDrop({  completion: 'failed'  })
-            console.log("FUCK MEFSDFSDFDSFd");
-            return;
-        }
         
         const reqBody = {
             "taskID": parseInt(e.dataTransfer.getData('id')),
@@ -179,33 +117,25 @@ export function DayBoard({ date, id, defaultTasksList, dataFetched, shiftWeeks }
         }
 
         axios.put('/app/task/', reqBody).then(
-            ()=>{
-                const newTasksList = tasksList
-                // newTasksList.splice(availableTimeIndex, 0, newTask)
-                newTasksList.push(newTask);
-                setTasksList(newTasksList);
+                ()=>{
+                    const newTasksList = tasksList
+                    // newTasksList.splice(availableTimeIndex, 0, newTask)
+                    newTasksList.push(newTask);
+                    setTasksList(newTasksList);
 
-                dropContext.setDrop({  completion: 'complete'  });
-            }
-        );
+                    dropContext.setDrop({  completion: 'complete'  });
+                }
+            ).catch(
+                ()=>{
+                    dropContext.setDrop({  completion: 'failed'  });
+                }
+            );
     }
 
     function handleDragOver(e: React.DragEvent<HTMLDivElement>) {
         e.preventDefault();
     }
 
-    function removeDraggedItem(taskID: number, startTime: string|null) {
-        // const removeIndex = findTaskByTime(startTime as string);
-        // console.log(tasksList);
-        // console.log(id + "remove " + removeIndex);
-        // if (removeIndex < 0) {
-        //     dropContext.setDrop({  completion: 'failed'  });
-        //     return;
-        // }
-        // const newTasksList = tasksList
-        // newTasksList.splice(removeIndex, 1);
-        // setTasksList(newTasksList);
-    }
 
     return(
         <div ref={thisElemRef} id={id} 
@@ -223,7 +153,7 @@ export function DayBoard({ date, id, defaultTasksList, dataFetched, shiftWeeks }
                     duration={val.duration} 
                     isScheduledDefault={true} 
                     startTime={val.startTime} 
-                    selfDestruct={removeDraggedItem}
+                    selfDestruct={()=>{}}
                     />
             ) : <></>}
         </div>
