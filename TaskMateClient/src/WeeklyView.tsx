@@ -1,9 +1,15 @@
+//GOD I JATE TIME ZONES *SOB*
+//FIX THEM LATER I STG THEYRE STILL FUCKED BEYOND BELIEF :(
+
+
 import React from 'react'
 import axios from './config/axiosConfig';
+
 import { TIME_SLOT_HEIGHT } from './utils/constants';
 import {  DayHeader, DayBoard  } from './DayColumn'
-import {  RightArrow, LeftArrow  } from './assets/RightArrow';
+import {  RightArrow, LeftArrow  } from './assets/SelectionArrows';
 import {  rawTaskFormat  } from './utils/globalTypes';
+import {  dateToLocalTimeZoneISOString  } from './utils/FormattingFunctions'
 
 function GridBackground() {
     function renderGridLines() {
@@ -53,15 +59,24 @@ export default function WeeklyView() {
         setDataFetched(false);
         const startOfWeek = weekDays[0];
         if (!startOfWeek) return;
-        const startOfWeekParam = startOfWeek.toISOString().slice(0, 10);
+        
+        // scars of the timezone struggle:
+        // const startOfWeekParts = startOfWeek.toLocaleString().split('/');
+        // const startOfWeekParam = startOfWeekParts[2].slice(0, 4) + "-" + startOfWeekParts[0] + "-" + startOfWeekParts[1];
+        // const startOfWeekParam = startOfWeek.toISOString().slice(0, 10);
+        const startOfWeekParam = dateToLocalTimeZoneISOString(startOfWeek).slice(0, 10)
 
+        console.log(startOfWeekParam);
+        // console.log(startOfWeek.toISOString());
         axios.get(`/app/scheduled-tasks-by-week/?calendar=${1}&startofweek=${startOfWeekParam}`).then(
             (result) => {  
                 const allTasks:rawTaskFormat[] = result.data;
                 const tempTasksByDay: rawTaskFormat[][] = [[], [], [], [], [], [], []];
                 let taskIndex = 0;
                 for (let weekDayIndex = 0; weekDayIndex < 7; weekDayIndex++) {
-                    while (taskIndex < allTasks.length && allTasks[taskIndex].startDate === weekDays[weekDayIndex].toISOString().slice(0, 10)) {
+                    // more shit that I need to fix for timezones
+                    const weekDayString = dateToLocalTimeZoneISOString(weekDays[weekDayIndex]).slice(0, 10);
+                    while (taskIndex < allTasks.length && allTasks[taskIndex].startDate === weekDayString) {
                         tempTasksByDay[weekDayIndex].push(allTasks[taskIndex]);
                         taskIndex++;
                     }
@@ -80,7 +95,7 @@ export default function WeeklyView() {
     function setWeekDaysState(weeksFromToday: number) { 
         const today = new Date();
         const todayDayOfWeek = today.getDay();
-
+        
         const weekDaysTemp = []
         for (let i = 0; i < 7; i++) {
             const date = new Date();
@@ -106,7 +121,7 @@ export default function WeeklyView() {
 
 
     return (
-    <>
+    <div className='px-10'>
         <div className='flex flex-row justify-center align-middle py-4 px-8'>
             <WeekSelectorArrow weekChangeDirection={-1} shiftWeeksFunc={shiftWeeks}/>
             <h2 style={{width: '28rem'}} className='text-xl font-bold'>{weekDays[0] ? `Week of ${weekDays[0].toDateString().slice(4)} – ${weekDays[6].toDateString().slice(4)}`: ''}</h2>
@@ -121,7 +136,7 @@ export default function WeeklyView() {
                 </div>)}
             </div> 
             <hr/>
-            <div style={{height:"70vh"}} className={`grid grid-cols-8 border-slate-200 overflow-y-scroll h-1/2 relative`}>
+            <div style={{height:"60vh"}} className={`grid grid-cols-8 border-slate-200 overflow-y-scroll h-1/2 relative`}>
             <GridBackground/>
                 <div className='text-right pr-2 bg-white z-10 relative'>{renderTimeLabels()}</div>
                 {weekDays.map((val, index)=> 
@@ -130,7 +145,7 @@ export default function WeeklyView() {
                 </div>)}
             </div> 
         </div>  
-    </>
+    </div>
     );
 } 
 

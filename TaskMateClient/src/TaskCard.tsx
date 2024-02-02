@@ -2,8 +2,10 @@ import React from 'react';
 import { formatDateTime, formatTime } from './utils/FormattingFunctions';
 import { TIME_SLOT_HEIGHT } from './utils/constants';
 import {  LatestDropContext  } from './App';
+import ModifyTaskOverlay from './ModifyTaskOverlay';
 
-type TaskData = {
+
+export type TaskData = {
     id: number,
     name: string,
     dueTime: string,
@@ -11,25 +13,28 @@ type TaskData = {
     duration: string,
     isScheduledDefault: boolean,
     startTime: string | null,
-    selfDestruct: (id: number, startTime: string|null)=>void;
+    startDate: string | null
 }
 
 const dragOffset = 16;
 
-export default function TaskCard({  id, name, dueTime, dueDate, duration, isScheduledDefault, startTime, selfDestruct  }: TaskData) {
+export default function TaskCard({  id, name, dueTime, dueDate, duration, isScheduledDefault, startTime, startDate  }: TaskData) {
     const thisElemRef = React.useRef<HTMLDivElement>(null);
     const dropContext = React.useContext(LatestDropContext);
     const [isScheduled, setIsScheduled] = React.useState<boolean>(isScheduledDefault);
     const [isDragging, setIsDragging] = React.useState<boolean>(false);
+    const [modifyTaskOverlayOpen, setModifyTaskOverlayOpen] = React.useState<boolean>(false);
+
 
     const formattedDueDateTime = formatDateTime(dueDate, dueTime);
     const formattedDuration = formatTime(duration);
     const slotsRequired = formattedDuration.hour * 4 + parseInt(formattedDuration.minute) / 15;
 
+
+    //Draggable functionality ------------------------------------------------------------------
     function handleDragStart(e: React.DragEvent<HTMLDivElement>) {
         if (!thisElemRef.current) return;
         const target = thisElemRef.current;
-        console.log(target.id);
 
         dropContext.setDrop({  completion: 'dragging'  });
         setIsDragging(true);
@@ -55,21 +60,20 @@ export default function TaskCard({  id, name, dueTime, dueDate, duration, isSche
             target.style.left = "0";
         }, 0)
         
-        e.stopPropagation;
+        e.stopPropagation();
     };
 
     //prevent cards from being dropped on top of each other
     function handleDragOver(e: React.DragEvent<HTMLDivElement>) {
-        e.stopPropagation;
+        e.stopPropagation();
     }
 
     function handleDragEnd(e: React.DragEvent<HTMLDivElement>) {
         if (dropContext.drop.completion != 'dropped') {
             dropContext.setDrop({  completion: 'failed'  });
         } else {
-            selfDestruct(id, startTime);
         }
-        e.stopPropagation;
+        e.stopPropagation();
     }
 
     React.useEffect(()=>{
@@ -82,8 +86,6 @@ export default function TaskCard({  id, name, dueTime, dueDate, duration, isSche
         }
         setIsDragging(false);        
     }, [dropContext.drop])
-
-
     
     function getTop () {
         const formattedStartTime = formatTime(startTime as string);     //function will only be called if startTime is defined
@@ -92,7 +94,21 @@ export default function TaskCard({  id, name, dueTime, dueDate, duration, isSche
         return `${top}px`;
     }
 
+    //Modify overlay functionality ------------------------------------------------------------------
+
     return (
+        <>
+        {modifyTaskOverlayOpen
+        ? <ModifyTaskOverlay 
+            taskID={id} 
+            name={name} 
+            dueTime={dueTime} 
+            dueDate={dueDate} 
+            duration={duration} 
+            startTime={startTime} 
+            startDate={startDate} 
+            closeOverlay={()=>{setModifyTaskOverlayOpen(false)}}/>
+        : null}
         <div 
             id={`TaskCard${id}`}
             ref={thisElemRef}
@@ -101,6 +117,7 @@ export default function TaskCard({  id, name, dueTime, dueDate, duration, isSche
             onDragStart={handleDragStart}
             onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
+            onDoubleClick={()=>{setModifyTaskOverlayOpen(true)}}
             style={{
                 height: isScheduled || isDragging ? `${slotsRequired * TIME_SLOT_HEIGHT}px` : 'auto',
                 width: isDragging ? '11vw' : (isScheduled ? '100%' : 'auto'),
@@ -115,5 +132,6 @@ export default function TaskCard({  id, name, dueTime, dueDate, duration, isSche
                 <p style={isScheduled || isDragging ? {display:"none"} : {}} className='text-xs'>takes <strong>{`${formattedDuration.hour}:${formattedDuration.minute}`}</strong> to complete</p>
             </div>
         </div>
+        </>
     );
 }

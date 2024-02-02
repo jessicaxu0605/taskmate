@@ -32,8 +32,6 @@ export function DayHeader({ date }:DayHeaderProps) {
 export function DayBoard({ date, id, defaultTasksList, dataFetched, shiftWeeks }:DayBoardProps) {
     const thisElemRef = React.useRef<HTMLDivElement>(null);
     const [tasksList, setTasksList] = React.useState(defaultTasksList);
-    const filledTimeSlots = React.useRef(Array.from({ length: 96 }, () => 0));
-
 
     
     React.useEffect(()=>{
@@ -41,11 +39,6 @@ export function DayBoard({ date, id, defaultTasksList, dataFetched, shiftWeeks }
             setTasksList(defaultTasksList);
         }
     }, [dataFetched])
-
-    React.useEffect(()=>{
-        console.log(id);
-        console.log(tasksList);
-    }, [tasksList])
 
 
     const dropContext = React.useContext(LatestDropContext);
@@ -79,7 +72,7 @@ export function DayBoard({ date, id, defaultTasksList, dataFetched, shiftWeeks }
     function handleDrop(e: React.DragEvent<HTMLDivElement>) {
         dropContext.setDrop({  completion: 'dropped'  });
         e.preventDefault();
-        e.stopPropagation;
+        e.stopPropagation();
 
         //number of 15 minute time slots from the top of the board
         const startTimeIn15Mins = getStartTime(e);
@@ -118,11 +111,7 @@ export function DayBoard({ date, id, defaultTasksList, dataFetched, shiftWeeks }
 
         axios.put('/app/task/', reqBody).then(
                 ()=>{
-                    const newTasksList = tasksList
-                    // newTasksList.splice(availableTimeIndex, 0, newTask)
-                    newTasksList.push(newTask);
-                    setTasksList(newTasksList);
-
+                    setTasksList((tasksList) => ([...tasksList, newTask]));
                     dropContext.setDrop({  completion: 'complete'  });
                 }
             ).catch(
@@ -141,7 +130,7 @@ export function DayBoard({ date, id, defaultTasksList, dataFetched, shiftWeeks }
         <div ref={thisElemRef} id={id} 
             onDrop={handleDrop}
             onDragOver={handleDragOver}
-            style={{height:"1536px"}}
+            style={{height:`${96 * TIME_SLOT_HEIGHT}px`}}
             className={`border-slate-200 border-x relative`}>
             {dataFetched ? tasksList.map((val, index)=>
                 <TaskCard 
@@ -153,7 +142,7 @@ export function DayBoard({ date, id, defaultTasksList, dataFetched, shiftWeeks }
                     duration={val.duration} 
                     isScheduledDefault={true} 
                     startTime={val.startTime} 
-                    selfDestruct={()=>{}}
+                    startDate={date.toISOString().slice(0, 10)}
                     />
             ) : <></>}
         </div>
