@@ -31,7 +31,7 @@ class Task(models.Model):
     # add later
     startDate = models.DateField(null=True, blank=True)
     startTime = models.TimeField(null=True, blank=True)
-    endTime = models.TimeField(null=True, blank=True)
+    # endTime = models.TimeField(null=True, blank=True)
 
     # optional
     eventTypeID = models.IntegerField(null=True, blank=True)
@@ -41,11 +41,11 @@ class Task(models.Model):
     scheduledDateTime = DateTimeRangeField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
-        if self.startDate == None or self.startTime == None or self.endTime == None:
+        if self.startDate == None or self.startTime == None:
             self.scheduledDateTime = (None)
         else :
             startDateTime = datetime.combine(self.startDate, self.startTime)
-            endDateTime = datetime.combine(self.startDate, self.endTime)
+            endDateTime = datetime.combine(self.startDate, self.startTime) + self.duration
             self.scheduledDateTime = (startDateTime, endDateTime)
         super().save(*args, **kwargs)
 
