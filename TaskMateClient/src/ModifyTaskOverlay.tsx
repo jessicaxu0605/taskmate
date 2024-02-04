@@ -21,6 +21,7 @@ type ModifyTaskOverlayProps = {
   startDate: string | null;
   startTime: string | null;
   closeOverlay: (result: CloseOverlayArgs) => void;
+  killTaskCard: () => void;
 };
 
 type FormRequestBody = {
@@ -48,6 +49,7 @@ export default function ModifyTaskOverlay({
   startDate,
   startTime,
   closeOverlay,
+  killTaskCard,
 }: ModifyTaskOverlayProps) {
   const [formInputs, setFormInputs] = React.useState<FormInputs>({
     name: name,
@@ -58,37 +60,13 @@ export default function ModifyTaskOverlay({
     startDate: startDate,
     startTime: startTime,
   });
-  const durationHourOptions: string[] = [
-    "00",
-    "01",
-    "02",
-    "03",
-    "04",
-    "05",
-    "06",
-    "07",
-    "08",
-    "09",
-    "10",
-    "11",
-    "12",
-    "13",
-    "14",
-    "15",
-    "16",
-    "17",
-    "18",
-    "19",
-    "20",
-    "21",
-    "22",
-    "23",
-    "24",
-  ];
+  //prettier-ignore
+  const durationHourOptions: string[] = ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24"];
+
   const [inputError, setInputError] = React.useState<inputErrors>(null);
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (formInputs.durationHour == "0" && formInputs.durationMinute == "00") {
+    if (formInputs.durationHour == "00" && formInputs.durationMinute == "00") {
       setInputError("error: time needed to complete task cannot be 0");
       return;
     }
@@ -105,6 +83,7 @@ export default function ModifyTaskOverlay({
     };
     const formInputDuration =
       formInputs.durationHour + ":" + formInputs.durationMinute + ":00";
+
     let isModified: boolean = false;
 
     if (formInputs.name != name) {
@@ -131,8 +110,7 @@ export default function ModifyTaskOverlay({
       reqBody.newData["startTime"] = formInputs.startTime + ":00";
       isModified = true;
     }
-    console.log("reqBody:");
-    console.log(reqBody);
+
     if (!isModified) {
       closeOverlay(null);
       return;
@@ -151,6 +129,13 @@ export default function ModifyTaskOverlay({
           );
         }
       });
+  }
+
+  function deleteTask() {
+    console.log(taskID);
+    axios.delete(`/app/task/?task=${taskID}`).then(() => {
+      killTaskCard();
+    });
   }
 
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -173,18 +158,18 @@ export default function ModifyTaskOverlay({
     closeOverlay(null);
   }
 
-  const inputStyles = "bg-slate-300 border-slate-400 border-b-2";
+  const inputStyles = "bg-slate-900 border-slate-500 border-b-2 text-slate-100";
 
   return (
     <>
       <div
         id="background"
-        className="flex justify-center items-center w-screen h-screen top-0 right-0 fixed z-30 bg-slate-800 bg-opacity-80"
+        className="flex justify-center items-center w-screen h-screen top-0 right-0 fixed z-30 bg-slate-900 bg-opacity-80 text-slate-100"
         onClick={backgroundExit}
       >
         <div
           style={{ width: "40rem" }}
-          className="bg-slate-300 br-10 text-left rounded-lg border-slate-400 border-2 opacity-100"
+          className="bg-slate-900 br-10 text-left rounded-lg border-slate-100 border-2 opacity-100"
         >
           <div className="flex flex-row justify-end">
             <div onClick={buttonExit} className="cursor-pointer">
@@ -316,14 +301,20 @@ export default function ModifyTaskOverlay({
             </div> */}
             {inputError == null ? null : (
               <div className="flex justify-center m-2">
-                <h2 className="text-red-800">{inputError}</h2>
+                <h2 className="text-red-600">{inputError}</h2>
               </div>
             )}
             <div className="flex flex-row justify-center m-4">
+              <button
+                className="border-slate-500 border-2 bg-slate-900 rounded-full font-bold py-3 px-6 mx-5"
+                onClick={deleteTask}
+              >
+                DELETE TASK
+              </button>
               <input
                 type="submit"
                 value="MODIFY TASK"
-                className="bg-red-800 rounded-full text-white font-bold py-3 px-6"
+                className="bg-violet-700 rounded-full text-white font-bold py-3 px-6 mx-5"
               />
             </div>
           </form>

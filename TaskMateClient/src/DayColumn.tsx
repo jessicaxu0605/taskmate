@@ -1,7 +1,7 @@
 import React from "react";
 import axios from "./config/axiosConfig";
 import { TIME_SLOT_HEIGHT } from "./utils/constants";
-import { LatestDropContext } from "./App";
+import { LatestDropContext } from "./WeeklyViewPage";
 import { rawTaskFormat } from "./utils/globalTypes";
 import TaskCard from "./TaskCard";
 
@@ -20,9 +20,13 @@ type DayHeaderProps = {
 export function DayHeader({ date }: DayHeaderProps) {
   const dayOfWeekStrings = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   return (
-    <div className={`p-2 flex flex-row h-11 border-x`}>
-      <span className="bg-red-800 rounded-full w-6 h-6 flex flex-col justify-center">
-        <h2 className="text-white font-bold text-sm">{date.getDate()}</h2>
+    <div
+      className={`p-2 flex flex-row h-11 border-x border-slate-800 text-slate-100 bg-`}
+    >
+      <span className="bg-violet-700 rounded-full w-6 h-6 flex flex-col justify-center bg">
+        <h2 className="text-white font-bold text-sm pt-0.5">
+          {date.getDate()}
+        </h2>
       </span>
       <h3 className={`text-left font-medium pl-2`}>
         {dayOfWeekStrings[date.getDay()]}
@@ -130,7 +134,7 @@ export function DayBoard({
       onDrop={handleDrop}
       onDragOver={handleDragOver}
       style={{ height: `${96 * TIME_SLOT_HEIGHT}px` }}
-      className={`border-slate-200 border-x relative`}
+      className={`border-slate-800 border-x relative`}
     >
       {dataFetched ? (
         tasksList.map((val, index) => (

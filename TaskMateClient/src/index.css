@@ -2,10 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+*,
+::before,
+::after {
+  border-color: initial;
+}
+
 :root {
   width: 100vw;
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
+  font-family: Overpass, Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 2;
   font-weight: 400;
 
   color-scheme: light dark;
@@ -32,6 +38,7 @@ body {
   min-width: 320px;
   min-height: 100vh;
   overflow-x: hidden;
+  scrollbar-color: rgb(30 41 59);
 }
 
 h1 {

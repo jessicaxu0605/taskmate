@@ -18,7 +18,7 @@ function GridBackground() {
         <hr
           key={i}
           style={{ height: `${4 * TIME_SLOT_HEIGHT}px` }}
-          className="border-b border-slate-100"
+          className="border-b border-slate-800"
         ></hr>
       );
     }
@@ -45,7 +45,7 @@ function WeekSelectorArrow({
   }
   return (
     <div
-      className="rounded-full bg-red-800 h-8 w-8 flex flex-row justify-center items-center"
+      className="rounded-full bg-violet-700 h-8 w-8 flex flex-row justify-center items-center"
       onClick={handleClick}
     >
       {weekChangeDirection == 1 ? <RightArrow /> : <LeftArrow />}
@@ -173,12 +173,15 @@ export default function WeeklyView() {
 
   return (
     <>
-      <div className="flex flex-row justify-center align-middle pb-8 pt-2 px-8">
+      <div className="flex flex-row justify-center align-middle pb-10 pt-2 px-8">
         <WeekSelectorArrow
           weekChangeDirection={-1}
           shiftWeeksFunc={shiftWeeks}
         />
-        <h2 style={{ width: "28rem" }} className="text-xl font-bold">
+        <h2
+          style={{ width: "28rem" }}
+          className="text-xl text-slate-100 font-bold pt-2"
+        >
           {weekDays[0]
             ? `Week of ${weekDays[0].toDateString().slice(4)} – ${weekDays[6]
                 .toDateString()
@@ -191,12 +194,10 @@ export default function WeeklyView() {
         />
       </div>
       <div
-        className="border-slate-200 border rounded-md"
+        className="border-slate-200 border-2 rounded-md"
         style={{ height: "80vh" }}
       >
-        <div
-          className={`grid grid-cols-8 border-slate-200 overflow-y-scroll relative`}
-        >
+        <div className={`grid grid-cols-8 overflow-y-scroll relative`}>
           <div key="empty"></div>
           {weekDays.map((val, index) => (
             <div key={index}>
@@ -207,10 +208,10 @@ export default function WeeklyView() {
         <hr />
         <div
           style={{ height: "72vh" }}
-          className={`grid grid-cols-8 border-slate-200 overflow-y-scroll relative`}
+          className={`grid grid-cols-8 overflow-y-scroll relative`}
         >
           <GridBackground />
-          <div className="text-right pr-2 bg-white z-10 relative">
+          <div className="text-right pr-2 bg-slate-900 z-10 relative text-slate-400">
             {renderTimeLabels()}
           </div>
           {weekDays.map((val, index) => (

@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import axios from "./config/axiosConfig";
 import TaskCard from "./TaskCard";
-import { LatestDropContext } from "./App";
+import { LatestDropContext } from "./WeeklyViewPage";
 import { rawTaskFormat } from "./utils/globalTypes";
 
 export default function UnscheduledTaskList() {
@@ -65,8 +65,8 @@ export default function UnscheduledTaskList() {
 
   return (
     <div
-      className="z-10 bg-slate-100 rounded-lg p-2 overflow-scroll hide-scrollbar"
-      style={{ maxHeight: "80vh" }}
+      className="z-10 border-2 border-slate-100 text-slate-100 rounded-lg p-2 overflow-scroll hide-scrollbar"
+      style={{ height: "80vh" }}
       ref={thisElemRef}
       id="unscheduled"
       onDrop={handleDrop}
@@ -75,7 +75,7 @@ export default function UnscheduledTaskList() {
       <div className="flex flex-row justify-center items-center p-2">
         <div
           onClick={getUnscheduledTasks}
-          className="mr-3 p-1.5 rounded-full bg-red-800"
+          className="mr-3 p-1.5 rounded-full bg-violet-700"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -92,7 +92,7 @@ export default function UnscheduledTaskList() {
         </div>
         <h2 className="text-lg font-bold">Unscheduled Tasks:</h2>
       </div>
-      <div className="bg-slate-100 min-h-8">
+      <div className="min-h-8">
         {dataFetched
           ? tasksList.map((val, index) => (
               <TaskCard

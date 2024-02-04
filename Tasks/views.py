@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.db import IntegrityError
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -85,8 +86,12 @@ class OneTask(APIView):
 
         serializer = serializers.TaskSerializer(data=data)
         if serializer.is_valid():
-            serializer.save()
-            return Response({'Success'}, status=201)
+            try:
+                serializer.save()
+                return Response({'Success'}, status=201)
+            except IntegrityError:
+                return Response({'Error: Overlapping Scheduled Tasks'}, status=409)
+            
         else:
             return Response(serializer.errors, status=400)
 
@@ -131,6 +136,8 @@ class OneTask(APIView):
             return Response({'Error: Selected calendar does not exist'}, status=404)
         except models.Task.DoesNotExist:
             return Response({'Error: Task does not exist'}, status=404)
+        except IntegrityError:
+            return Response({'Error: Overlapping Scheduled Tasks'}, status=409)
 
 
 class NewCalendar(APIView):

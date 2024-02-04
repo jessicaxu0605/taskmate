@@ -102,17 +102,17 @@ export default function CreateTaskOverlay({
     closeOverlay();
   }
 
-  const inputStyles = "bg-slate-300 border-slate-400 border-b-2";
+  const inputStyles = "bg-slate-900 border-slate-500 border-b-2 text-slate-100";
 
   return (
     <div
       id="background"
-      className="flex justify-center items-center w-screen h-screen top-0 right-0 fixed z-30 bg-slate-800 bg-opacity-80"
+      className="flex justify-center items-center w-screen h-screen top-0 right-0 fixed z-30 bg-slate-900 bg-opacity-80 text-slate-100"
       onClick={backgroundExit}
     >
       <div
         style={{ width: "40rem" }}
-        className="bg-slate-300 br-10 text-left rounded-lg border-slate-400 border-2 opacity-100"
+        className="bg-slate-900 br-10 text-left rounded-lg border-slate-100 border-2 opacity-100"
       >
         <div className="flex flex-row justify-end">
           <div onClick={buttonExit} className="cursor-pointer">
@@ -209,15 +209,15 @@ export default function CreateTaskOverlay({
             </div>
           </div>
           {inputError == null ? null : (
-            <div>
-              <h2>{inputError}</h2>
+            <div className="flex justify-center m-2">
+              <h2 className="text-red-600">{inputError}</h2>
             </div>
           )}
           <div className="flex flex-row justify-center m-4">
             <input
               type="submit"
               value="CREATE TASK"
-              className="bg-red-800 rounded-full text-white font-bold py-3 px-6"
+              className="bg-violet-700 rounded-full text-white font-bold py-3 px-6 bg-"
             />
           </div>
         </form>

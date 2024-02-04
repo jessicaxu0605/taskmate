@@ -1,12 +1,10 @@
 import React from "react";
 import {
   dateTimeToDateAndTimeString,
-  HHMMSStoHourMinuteJSON,
   getTimeInNumOf15Mins,
-  YYYYMMDDtoDateString,
 } from "./utils/FormattingFunctions";
 import { TIME_SLOT_HEIGHT } from "./utils/constants";
-import { LatestDropContext } from "./App";
+import { LatestDropContext } from "./WeeklyViewPage";
 import ModifyTaskOverlay, { CloseOverlayArgs } from "./ModifyTaskOverlay";
 
 export type TaskProps = {
@@ -29,18 +27,10 @@ export type ModifiableTaskData = {
   startDate: string | null;
 };
 
-const dragOffset = 16;
+const DRAG_OFFSET = 16;
 
-export default function TaskCard({
-  id,
-  name,
-  dueTime,
-  dueDate,
-  duration,
-  isScheduledDefault,
-  startTime,
-  startDate,
-}: TaskProps) {
+//prettier-ignore
+export default function TaskCard({id, name, dueTime, dueDate, duration, isScheduledDefault, startTime, startDate}: TaskProps) {
   const [taskData, setTaskData] = React.useState<ModifiableTaskData>({
     name: name,
     dueTime: dueTime,
@@ -49,15 +39,15 @@ export default function TaskCard({
     startTime: startTime,
     startDate: startDate,
   });
-  console.log(taskData);
-
   const thisElemRef = React.useRef<HTMLDivElement>(null);
   const dropContext = React.useContext(LatestDropContext);
   const [isScheduled, setIsScheduled] =
     React.useState<boolean>(isScheduledDefault);
   const [isDragging, setIsDragging] = React.useState<boolean>(false);
+
   const [modifyTaskOverlayOpen, setModifyTaskOverlayOpen] =
     React.useState<boolean>(false);
+  const [isDead, setIsDead] = React.useState<boolean>(false);
 
   //Draggable functionality ------------------------------------------------------------------
   function handleDragStart(e: React.DragEvent<HTMLDivElement>) {
@@ -67,9 +57,11 @@ export default function TaskCard({
     dropContext.setDrop({ completion: "dragging" });
     setIsDragging(true);
 
+    const boundingRect = thisElemRef.current.getBoundingClientRect();
     if (!isScheduled) {
       target.style.position = "relative";
-      target.style.left = `${e.clientX - 32 - dragOffset}px`;
+      target.style.left = `${e.clientX - boundingRect.x - DRAG_OFFSET}px`;
+      target.style.top = `${e.clientY - boundingRect.y - DRAG_OFFSET}px`;
     }
 
     e.dataTransfer.setData("cardID", target.id);
@@ -78,7 +70,7 @@ export default function TaskCard({
     e.dataTransfer.setData("dueTime", taskData.dueTime);
     e.dataTransfer.setData("dueDate", taskData.dueDate);
     e.dataTransfer.setData("duration", taskData.duration);
-    e.dataTransfer.setDragImage(target, dragOffset, dragOffset);
+    e.dataTransfer.setDragImage(target, DRAG_OFFSET, DRAG_OFFSET);
 
     // hide the original card, using set timeout to prevent the "dragged" version from being hidden too
     setTimeout(() => {
@@ -141,6 +133,13 @@ export default function TaskCard({
     setModifyTaskOverlayOpen(false);
   }
 
+  function killTaskCard() {
+    console.log("here")
+    setIsDead(true);
+  }
+
+  if (isDead) return;
+
   return (
     <>
       {modifyTaskOverlayOpen ? (
@@ -153,6 +152,7 @@ export default function TaskCard({
           startTime={taskData.startTime}
           startDate={taskData.startDate}
           closeOverlay={closeOverlay}
+          killTaskCard={killTaskCard}
         />
       ) : null}
       <div
@@ -172,18 +172,17 @@ export default function TaskCard({
                   getTimeInNumOf15Mins(taskData.duration) * TIME_SLOT_HEIGHT
                 }px`
               : "auto",
-          width: isDragging ? "11vw" : isScheduled ? "100%" : "auto",
+          width: isDragging ? "8vw" : isScheduled ? "100%" : "auto",
           top: isScheduledDefault ? getTop() : "0",
           position: isScheduledDefault ? "absolute" : "static",
           display: "block",
         }}
-        className={`${
-          isScheduled || isDragging ? `px-1` : `p-1`
-        } bg-slate-300 br-10 text-left rounded-lg border-slate-400 border-2 z-10 cursor-grab overflow-hidden`}
+        //prettier-ignore
+        className={`${isScheduled || isDragging ? `px-1` : `p-2 m-1`} 
+        bg-slate-700 br-10 text-left rounded-lg border-slate-600 border-2 z-10 cursor-grab overflow-hidden text-slate-100`}
       >
         <div
           className={`overflow-hidden`}
-          //   ${isScheduled || isDragging ? "" : `grid grid-cols-3`}
         >
           <h3
             style={isScheduled || isDragging ? { height: "100%" } : {}}

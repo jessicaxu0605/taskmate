@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, IntegrityError
 from django.utils import timezone
 from Users.models import User
 from django.contrib.postgres.constraints import ExclusionConstraint
@@ -48,7 +48,6 @@ class Task(models.Model):
             endDateTime = datetime.combine(self.startDate, self.startTime) + self.duration
             self.scheduledDateTime = (startDateTime, endDateTime)
         super().save(*args, **kwargs)
-
 
     class Meta:
         constraints = [

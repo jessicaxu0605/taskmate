@@ -13,11 +13,12 @@ class RegisterSerializer(serializers.ModelSerializer):
         fields = "__all__"
     
     def validate(self, data):
-        if data.get('password') != data.get('verifyPassword'):
-            raise serializers.ValidationError({"Password fields didn't match."})
-        else:
-            data.pop('verifyPassword')
-            return data
+        # if data.get('password') != data.get('verifyPassword'):
+        #     print(data)
+        #     raise serializers.ValidationError({"Password fields didn't match."})
+        # else:
+        #     data.pop('verifyPassword')
+        return data
     
     def create(self, validated_data):
         user = models.User.objects.create_user(

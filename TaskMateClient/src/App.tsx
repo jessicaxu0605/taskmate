@@ -1,65 +1,34 @@
-import React, { Dispatch, SetStateAction } from "react";
 import "./App.css";
+import React from "react";
+import LoginPage from "./LoginPage";
+import WeeklyViewPage from "./WeeklyViewPage";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import RegisterPage from "./RegisterPage";
 
-//Components:
-import UnscheduledTaskList from "./UnscheduledTaskList";
-import WeeklyView from "./WeeklyView";
-import CreateTaskOverlay from "./CreateTaskOverlay";
-
-type DropContextData = {
-  completion: "dragging" | "dropped" | "failed" | "complete" | null;
+type UserEmailContextType = {
+  email: number | null;
+  setEmail: React.Dispatch<React.SetStateAction<number | null>>;
 };
-type DropContext = {
-  drop: DropContextData;
-  setDrop: Dispatch<SetStateAction<DropContextData>>;
-};
-export const LatestDropContext = React.createContext<DropContext>({
-  drop: { completion: null },
-  setDrop: () => {},
+export const UserEmailContext = React.createContext<UserEmailContextType>({
+  email: null,
+  setEmail: () => {},
 });
 
-type ModifyTaskOverlayContext = {
-  modifyTaskOverlayOpen: boolean;
-  setModifyTaskOverlayOpen: Dispatch<SetStateAction<boolean>>;
-};
-export const ModifyTaskOverlayContext =
-  React.createContext<ModifyTaskOverlayContext>({
-    modifyTaskOverlayOpen: false,
-    setModifyTaskOverlayOpen: () => {},
-  });
-
-function App() {
-  const [drop, setDrop] = React.useState<DropContextData>({ completion: null });
-  const [createTaskOverlayOpen, setCreateTaskOverlayOpen] =
-    React.useState<boolean>(false);
-  const [modifyTaskOverlayOpen, setModifyTaskOverlayOpen] =
-    React.useState<boolean>(false);
-
+export default function App() {
+  const [activeUserEmail, setActiveUserEmail] = React.useState<number | null>(
+    null
+  );
   return (
-    <LatestDropContext.Provider value={{ drop, setDrop }}>
-      {createTaskOverlayOpen ? (
-        <CreateTaskOverlay
-          closeOverlay={() => setCreateTaskOverlayOpen(false)}
-        />
-      ) : null}
-      <div className="flex flex-row p-10">
-        <div style={{ width: "30%" }} className="pr-5">
-          <button
-            onClick={() => setCreateTaskOverlayOpen(true)}
-            className="bg-red-800 rounded-lg text-white font-bold py-3 px-6 mb-6"
-            style={{ width: "100%" }}
-          >
-            CREATE NEW TASK
-          </button>
-          <UnscheduledTaskList />
-        </div>
-
-        <div style={{ width: "70%" }}>
-          <WeeklyView />
-        </div>
-      </div>
-    </LatestDropContext.Provider>
+    <UserEmailContext.Provider
+      value={{ email: activeUserEmail, setEmail: setActiveUserEmail }}
+    >
+      <BrowserRouter>
+        <Routes>
+          <Route path="/weekly-view" element={<WeeklyViewPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+        </Routes>
+      </BrowserRouter>
+    </UserEmailContext.Provider>
   );
 }
-
-export default App;
