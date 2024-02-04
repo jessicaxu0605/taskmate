@@ -6,11 +6,13 @@ from django.contrib.postgres.fields import DateTimeRangeField, RangeOperators, R
 from django.db import models
 from datetime import datetime
 
-class Calendar(models.Model):
-    
+class Calendar(models.Model): 
     owner = models.ForeignKey(User, on_delete=models.PROTECT)
     sharedUsers = models.ManyToManyField(User, through='Calendar2User', related_name='ownedCalendars')
     name = models.CharField(max_length=100)
+    dateCreated = models.DateTimeField(auto_now_add=True)                       # auto
+    dateModified = models.DateTimeField(auto_now=True)
+
 
 class Calendar2User(models.Model):
     calendar = models.ForeignKey(Calendar, on_delete=models.PROTECT)

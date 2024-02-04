@@ -9,6 +9,7 @@ class Calendar2UserInline(admin.TabularInline):
 
 class CalendarAdmin(admin.ModelAdmin):
     list_display = ('id', 'name')
+    readonly_fields=('dateCreated', 'dateModified')
     inlines=[Calendar2UserInline]
 
 admin.site.register(models.Task, TaskAdmin)

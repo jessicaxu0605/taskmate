@@ -21,7 +21,7 @@ export function DayHeader({ date }: DayHeaderProps) {
   const dayOfWeekStrings = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   return (
     <div
-      className={`p-2 flex flex-row h-11 border-x border-slate-800 text-slate-100 bg-`}
+      className={`p-2 flex flex-row items-center h-11 border-x border-slate-800 text-slate-100 bg-`}
     >
       <span className="bg-violet-700 rounded-full w-6 h-6 flex flex-col justify-center bg">
         <h2 className="text-white font-bold text-sm pt-0.5">

@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from datetime import date, datetime, timedelta
 from . import models, serializers
+from Users.models import User
 
 
 class AllTasks(APIView):
@@ -139,17 +140,34 @@ class OneTask(APIView):
         except IntegrityError:
             return Response({'Error: Overlapping Scheduled Tasks'}, status=409)
 
-
+class UsersCalendars(APIView):
+    def get(self, request):
+        userEmail = request.query_params.get('user', None)
+        try:
+            user = User.objects.get(email=userEmail)
+            ownedCalendars = models.Calendar.objects.filter(owner=user)
+            serializer = serializers.CalendarSerializer(ownedCalendars, many=True)
+            return Response(serializer.data, status=200)
+        except:
+            return Response({'Error: no existing user is logged in'}, status=401)
+        
 class NewCalendar(APIView):
     # permission_classes = [IsAuthenticated]
     def post(self, request):
-        data = request.data
+        requestData = request.data
+        ownerEmail = requestData["ownerEmail"]
+        owner = User.objects.get(email=ownerEmail)
+        data = {
+            "owner": owner.id,
+            "name": requestData["name"],
+            "sharedUsers": []
+        }
         # user = request.user
-        # data.update({'user': user})
         serializer = serializers.CalendarSerializer(data=data)
         if (serializer.is_valid()):
-            serializer.save()
-            return Response({'Success'}, status=201)
+            newCalendar = serializer.save()
+            calendarID = newCalendar.id
+            return Response({'calendarID': calendarID}, status=201)
         else:
             return Response(serializer.errors, status=400)
 

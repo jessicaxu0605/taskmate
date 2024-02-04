@@ -1,5 +1,6 @@
 import React from "react";
 import axios from "./config/axiosConfig";
+import { CalendarContext } from "./App";
 
 type FormInputs = {
   name: string | null;
@@ -28,34 +29,12 @@ export default function CreateTaskOverlay({
     durationHour: "0",
     durationMinute: "00",
   });
-  const durationHourOptions: string[] = [
-    "00",
-    "01",
-    "02",
-    "03",
-    "04",
-    "05",
-    "06",
-    "07",
-    "08",
-    "09",
-    "10",
-    "11",
-    "12",
-    "13",
-    "14",
-    "15",
-    "16",
-    "17",
-    "18",
-    "19",
-    "20",
-    "21",
-    "22",
-    "23",
-    "24",
+  //prettier-ignore
+  const durationHourOptions: string[] = [ "00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24",
   ];
   const [inputError, setInputError] = React.useState<inputErrors>(null);
+  const calendarID = React.useContext(CalendarContext).calendarID;
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (formInputs.durationHour == "0" && formInputs.durationMinute == "00") {
@@ -70,7 +49,7 @@ export default function CreateTaskOverlay({
     }
 
     const reqBody = {
-      calendarID: 1, //temp
+      calendarID: calendarID,
       name: formInputs.name,
       dueDate: formInputs.dueDate,
       dueTime: formInputs.dueTime + ":00",

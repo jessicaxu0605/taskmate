@@ -22,7 +22,32 @@ export function dateTimeToDateAndTimeString(date: string, time: string) {
     timeFormatOptions
   );
 
-  return formattedDate + " at " + formattedTime;
+  return formattedDate + ", " + formattedTime;
+}
+
+export function ISOStringToDateAndTimeString(ISOString: string) {
+  const inputAsDateObject = new Date(ISOString);
+
+  const dateFormatOptions: Intl.DateTimeFormatOptions = {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  };
+
+  const timeFormatOptions: Intl.DateTimeFormatOptions = {
+    hour: "numeric",
+    minute: "2-digit",
+  };
+  const formattedDate = inputAsDateObject.toLocaleString(
+    "en-US",
+    dateFormatOptions
+  );
+  const formattedTime = inputAsDateObject.toLocaleString(
+    "en-US",
+    timeFormatOptions
+  );
+
+  return formattedDate + ", " + formattedTime;
 }
 
 export function YYYYMMDDtoDateString(date: string) {

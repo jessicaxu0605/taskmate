@@ -9,6 +9,7 @@ import { DayHeader, DayBoard } from "./DayColumn";
 import { RightArrow, LeftArrow } from "./assets/SelectionArrows";
 import { rawTaskFormat } from "./utils/globalTypes";
 import { dateToLocalTimeZoneISOString } from "./utils/FormattingFunctions";
+import { CalendarContext } from "./App";
 
 function GridBackground() {
   function renderGridLines() {
@@ -44,12 +45,12 @@ function WeekSelectorArrow({
     shiftWeeksFunc(weekChangeDirection);
   }
   return (
-    <div
-      className="rounded-full bg-violet-700 h-8 w-8 flex flex-row justify-center items-center"
+    <button
+      className="rounded-full bg-violet-700 h-8 w-8 flex flex-row justify-center items-center p-1"
       onClick={handleClick}
     >
       {weekChangeDirection == 1 ? <RightArrow /> : <LeftArrow />}
-    </div>
+    </button>
   );
 }
 
@@ -66,6 +67,7 @@ export default function WeeklyView() {
     [],
   ]);
   const [dataFetched, setDataFetched] = React.useState<boolean>(false);
+  const calendarID = React.useContext(CalendarContext).calendarID;
 
   React.useEffect(() => {
     setWeekDaysState(weeksFromToday);
@@ -80,15 +82,13 @@ export default function WeeklyView() {
     // const startOfWeekParts = startOfWeek.toLocaleString().split('/');
     // const startOfWeekParam = startOfWeekParts[2].slice(0, 4) + "-" + startOfWeekParts[0] + "-" + startOfWeekParts[1];
     // const startOfWeekParam = startOfWeek.toISOString().slice(0, 10);
-    const startOfWeekParam = dateToLocalTimeZoneISOString(startOfWeek).slice(
-      0,
-      10
-    );
+    //prettier-ignore
+    const startOfWeekParam = dateToLocalTimeZoneISOString(startOfWeek).slice(0, 10);
 
     // console.log(startOfWeek.toISOString());
     axios
       .get(
-        `/app/scheduled-tasks-by-week/?calendar=${1}&startofweek=${startOfWeekParam}`
+        `/app/scheduled-tasks-by-week/?calendar=${calendarID}&startofweek=${startOfWeekParam}`
       )
       .then((result) => {
         const allTasks: rawTaskFormat[] = result.data;
@@ -110,7 +110,7 @@ export default function WeeklyView() {
         setTasksByDay(tempTasksByDay);
         setDataFetched(true);
       });
-  }, [weekDays]);
+  }, [weekDays, calendarID]);
 
   function shiftWeeks(weekChangeDirection: number) {
     setWeeksFromToday(
@@ -195,7 +195,7 @@ export default function WeeklyView() {
       </div>
       <div
         className="border-slate-200 border-2 rounded-md"
-        style={{ height: "80vh" }}
+        style={{ height: "75vh" }}
       >
         <div className={`grid grid-cols-8 overflow-y-scroll relative`}>
           <div key="empty"></div>
@@ -207,7 +207,7 @@ export default function WeeklyView() {
         </div>
         <hr />
         <div
-          style={{ height: "72vh" }}
+          style={{ height: "66vh" }}
           className={`grid grid-cols-8 overflow-y-scroll relative`}
         >
           <GridBackground />

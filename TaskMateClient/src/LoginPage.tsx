@@ -37,7 +37,8 @@ function LoginForm() {
       .then((result) => {
         console.log(result);
         userEmailContext.setEmail(result.data.email);
-        navigate("/weekly-view");
+        sessionStorage.setItem("activeUserEmail", result.data.email);
+        navigate("/calendars");
       })
       .catch((err) => {
         console.log(err);
