@@ -6,7 +6,8 @@ __pycache__/
 venv
 
 *.log
-db.sqlite3
+*.sqlite3
+*.sql
 **/migrations/*.py
 **/migrations/*.pyc
 
