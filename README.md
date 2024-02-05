@@ -1,6 +1,8 @@
 # TaskMate #
 **Technologies Used: Typescript, React, Django, Django Rest Framework, Tailwind CSS, AWS (S3, EC2, RDS)**
 
+## demo: http://taskmate-client.s3-website.us-east-2.amazonaws.com/
+
 ## Key Features:
 Managing your to-do list has never been easier. TaskMate allows you to quickly assess and allocate time to each task, providing a clear overview of your priorities.
 * Effortless Task Planning: Plan and organize your tasks with ease using the intuitive drag-and-drop calendar.
