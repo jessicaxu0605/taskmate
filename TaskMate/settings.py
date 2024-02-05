@@ -28,11 +28,13 @@ SECRET_KEY = 'django-insecure-1y!fj_s$^=on&qf7&mof4d9ql#684eyoxmlfvay_6e&ot!=mzb
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    '18.220.34.33'
+]
 
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:5173'
-    # 'http://localhost:5173/login'
+    'http://localhost:5173',
+    'http://taskmate-client.s3-website.us-east-2.amazonaws.com'
 ]
 CORS_ALLOW_CREDENTIALS = True
 
