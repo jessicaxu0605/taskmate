@@ -1,4 +1,4 @@
-import React from "react";
+import { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { CalendarContext } from "./App";
 import { ISOStringToDateAndTimeString } from "./utils/FormattingFunctions";
@@ -18,8 +18,11 @@ export default function CalendarCard({
   dateModified,
   dateCreated,
 }: CalendarCardProps) {
+  // @ts-ignore
+  const implementLater = owner + dateCreated;
+
   const navigate = useNavigate();
-  const calendarContext = React.useContext(CalendarContext);
+  const calendarContext = useContext(CalendarContext);
 
   function handleClick() {
     calendarContext.setCalendarID(id);

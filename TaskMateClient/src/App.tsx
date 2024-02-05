@@ -1,5 +1,5 @@
 import "./App.css";
-import React from "react";
+import { useState, createContext } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 // pages:
@@ -13,7 +13,7 @@ type UserEmailContextType = {
   email: string | null;
   setEmail: React.Dispatch<React.SetStateAction<string | null>>;
 };
-export const UserEmailContext = React.createContext<UserEmailContextType>({
+export const UserEmailContext = createContext<UserEmailContextType>({
   email: null,
   setEmail: () => {},
 });
@@ -22,7 +22,7 @@ type CalendarContextType = {
   calendarID: number | null;
   setCalendarID: React.Dispatch<React.SetStateAction<number | null>>;
 };
-export const CalendarContext = React.createContext<CalendarContextType>({
+export const CalendarContext = createContext<CalendarContextType>({
   calendarID: null,
   setCalendarID: () => {},
 });
@@ -35,7 +35,7 @@ type AuthContextType = {
   logout: () => void;
 };
 
-export const AuthContext = React.createContext<AuthContextType>({
+export const AuthContext = createContext<AuthContextType>({
   accessToken: null,
   refreshToken: null,
   setAccessToken: () => {},
@@ -44,12 +44,12 @@ export const AuthContext = React.createContext<AuthContextType>({
 });
 
 export default function App() {
-  const [activeUserEmail, setActiveUserEmail] = React.useState<string | null>(
+  const [activeUserEmail, setActiveUserEmail] = useState<string | null>(
     sessionStorage.getItem("activeUserEmail") != null
       ? sessionStorage.getItem("activeUserEmail")
       : null
   );
-  const [activeCalendarID, setActiveCalendarID] = React.useState<number | null>(
+  const [activeCalendarID, setActiveCalendarID] = useState<number | null>(
     sessionStorage.getItem("activeCalendarID") != null
       ? parseInt(sessionStorage.getItem("activeCalendarID") as string)
       : null

@@ -1,4 +1,4 @@
-import React from "react";
+import { useState, useContext } from "react";
 import axios from "./config/axiosConfig";
 import { CalendarContext, UserEmailContext } from "./App";
 import { useNavigate } from "react-router-dom";
@@ -20,13 +20,13 @@ type CreateTaskOverlayProps = {
 export default function CreateTaskOverlay({
   closeOverlay,
 }: CreateTaskOverlayProps) {
-  const [formInputs, setFormInputs] = React.useState<FormInputs>({
+  const [formInputs, setFormInputs] = useState<FormInputs>({
     name: null,
     owner: null,
   });
-  // const [inputError, setInputError] = React.useState<inputErrors>(null);
-  const userEmail = React.useContext(UserEmailContext).email;
-  const calendarContext = React.useContext(CalendarContext);
+  // const [inputError, setInputError] = useState<inputErrors>(null);
+  const userEmail = useContext(UserEmailContext).email;
+  const calendarContext = useContext(CalendarContext);
   const navigate = useNavigate();
 
   function handleSubmit(e: React.FormEvent) {

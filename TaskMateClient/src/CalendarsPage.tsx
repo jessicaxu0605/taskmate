@@ -1,4 +1,4 @@
-import React from "react";
+import { useState, useContext, useEffect } from "react";
 import axios from "./config/axiosConfig";
 import { UserEmailContext } from "./App";
 import CalendarCard from "./CalendarCard";
@@ -14,13 +14,13 @@ type Calendar = {
 };
 
 export default function CalendarsPage() {
-  const userEmail = React.useContext(UserEmailContext).email; //component shouldn't be able to overwrite user email
-  const [dataFetched, setDataFetched] = React.useState<boolean>(false);
-  const [ownedEmails, setOwnedEmails] = React.useState<Calendar[]>([]);
+  const userEmail = useContext(UserEmailContext).email; //component shouldn't be able to overwrite user email
+  const [dataFetched, setDataFetched] = useState<boolean>(false);
+  const [ownedEmails, setOwnedEmails] = useState<Calendar[]>([]);
   const [createCalendarOverlayOpen, setCreateCalendarOverlayOpen] =
-    React.useState<boolean>(false);
+    useState<boolean>(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     axios
       .get(`/app/user-calendars/?user=${userEmail}`) //replace with userEmail later
       .then((response) => {

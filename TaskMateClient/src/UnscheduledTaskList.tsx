@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useState, useEffect, useRef, useContext } from "react";
 import axios from "./config/axiosConfig";
 import TaskCard from "./TaskCard";
 import { LatestDropContext } from "./WeeklyViewPage";
@@ -6,13 +6,13 @@ import { rawTaskFormat } from "./utils/globalTypes";
 import { CalendarContext } from "./App";
 
 export default function UnscheduledTaskList() {
-  const [dataFetched, setDataFetched] = React.useState<boolean>(false);
-  const [tasksList, setTasksList] = React.useState<rawTaskFormat[]>([]);
-  const thisElemRef = React.useRef<HTMLDivElement>(null);
-  const dropContext = React.useContext(LatestDropContext);
+  const [dataFetched, setDataFetched] = useState<boolean>(false);
+  const [tasksList, setTasksList] = useState<rawTaskFormat[]>([]);
+  const thisElemRef = useRef<HTMLDivElement>(null);
+  const dropContext = useContext(LatestDropContext);
 
   // TEMP:
-  const calendarID = React.useContext(CalendarContext).calendarID;
+  const calendarID = useContext(CalendarContext).calendarID;
   function getUnscheduledTasks() {
     axios
       .get(`/app/all-unscheduled-tasks/?calendar=${calendarID}`)
@@ -21,7 +21,7 @@ export default function UnscheduledTaskList() {
         setDataFetched(true);
       });
   }
-  React.useEffect(() => {
+  useEffect(() => {
     getUnscheduledTasks();
   }, []);
 

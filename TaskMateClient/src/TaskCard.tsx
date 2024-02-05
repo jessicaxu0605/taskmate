@@ -1,4 +1,4 @@
-import React from "react";
+import { useState, useRef, useEffect, useContext } from "react";
 import {
   dateTimeToDateAndTimeString,
   getTimeInNumOf15Mins,
@@ -31,7 +31,7 @@ const DRAG_OFFSET = 16;
 
 //prettier-ignore
 export default function TaskCard({id, name, dueTime, dueDate, duration, isScheduledDefault, startTime, startDate}: TaskProps) {
-  const [taskData, setTaskData] = React.useState<ModifiableTaskData>({
+  const [taskData, setTaskData] = useState<ModifiableTaskData>({
     name: name,
     dueTime: dueTime,
     dueDate: dueDate,
@@ -39,15 +39,16 @@ export default function TaskCard({id, name, dueTime, dueDate, duration, isSchedu
     startTime: startTime,
     startDate: startDate,
   });
-  const thisElemRef = React.useRef<HTMLDivElement>(null);
-  const dropContext = React.useContext(LatestDropContext);
+  const thisElemRef = useRef<HTMLDivElement>(null);
+  const dropContext = useContext(LatestDropContext);
+  // @ts-ignore
   const [isScheduled, setIsScheduled] =
-    React.useState<boolean>(isScheduledDefault);
-  const [isDragging, setIsDragging] = React.useState<boolean>(false);
+    useState<boolean>(isScheduledDefault);
+  const [isDragging, setIsDragging] = useState<boolean>(false);
 
   const [modifyTaskOverlayOpen, setModifyTaskOverlayOpen] =
-    React.useState<boolean>(false);
-  const [isDead, setIsDead] = React.useState<boolean>(false);
+    useState<boolean>(false);
+  const [isDead, setIsDead] = useState<boolean>(false);
 
   //Draggable functionality ------------------------------------------------------------------
   function handleDragStart(e: React.DragEvent<HTMLDivElement>) {
@@ -94,7 +95,7 @@ export default function TaskCard({id, name, dueTime, dueDate, duration, isSchedu
     e.stopPropagation();
   }
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (
       !isDragging ||
       dropContext.drop.completion == "dragging" ||

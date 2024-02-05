@@ -1,10 +1,9 @@
-import React, { Dispatch, SetStateAction } from "react";
+import { useState, createContext, Dispatch, SetStateAction } from "react";
 
 //Components:
 import UnscheduledTaskList from "./UnscheduledTaskList";
 import WeeklyView from "./WeeklyView";
 import CreateTaskOverlay from "./CreateTaskOverlay";
-import { CalendarContext } from "./App";
 import { Link } from "react-router-dom";
 import { LeftArrow } from "./assets/SelectionArrows";
 
@@ -15,16 +14,15 @@ type DropContext = {
   drop: DropContextData;
   setDrop: Dispatch<SetStateAction<DropContextData>>;
 };
-export const LatestDropContext = React.createContext<DropContext>({
+export const LatestDropContext = createContext<DropContext>({
   drop: { completion: null },
   setDrop: () => {},
 });
 
 export default function WeeklyViewPage() {
-  const [drop, setDrop] = React.useState<DropContextData>({ completion: null });
+  const [drop, setDrop] = useState<DropContextData>({ completion: null });
   const [createTaskOverlayOpen, setCreateTaskOverlayOpen] =
-    React.useState<boolean>(false);
-  const calendarContext = React.useContext(CalendarContext);
+    useState<boolean>(false);
 
   return (
     <LatestDropContext.Provider value={{ drop, setDrop }}>

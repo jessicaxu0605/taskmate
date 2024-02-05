@@ -1,4 +1,4 @@
-import React from "react";
+import { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "./config/axiosConfig";
 import { UserEmailContext } from "./App";
@@ -14,12 +14,12 @@ type inputErrors =
   | null;
 
 function LoginForm() {
-  const userEmailContext = React.useContext(UserEmailContext);
-  const [formInputs, setFormInputs] = React.useState<FormInputs>({
+  const userEmailContext = useContext(UserEmailContext);
+  const [formInputs, setFormInputs] = useState<FormInputs>({
     email: null,
     password: null,
   });
-  const [inputError, setInputError] = React.useState<inputErrors>(null);
+  const [inputError, setInputError] = useState<inputErrors>(null);
   const navigate = useNavigate();
 
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {

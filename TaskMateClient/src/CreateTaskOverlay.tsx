@@ -1,14 +1,14 @@
-import React from "react";
+import { useState, useContext } from "react";
 import axios from "./config/axiosConfig";
 import { CalendarContext } from "./App";
 
-type FormInputs = {
-  name: string | null;
-  dueDate: string | null;
-  dueTime: string | null;
-  durationHour: string | null;
-  durationMinute: string | null;
-};
+// type FormInputs = {
+//   name: string | null;
+//   dueDate: string | null;
+//   dueTime: string | null;
+//   durationHour: string | null;
+//   durationMinute: string | null;
+// };
 
 type CreateTaskOverlayProps = {
   closeOverlay: () => void;
@@ -22,7 +22,7 @@ type inputErrors =
 export default function CreateTaskOverlay({
   closeOverlay,
 }: CreateTaskOverlayProps) {
-  const [formInputs, setFormInputs] = React.useState<FormInputs>({
+  const [formInputs, setFormInputs] = useState({
     name: null,
     dueDate: null,
     dueTime: null,
@@ -32,8 +32,8 @@ export default function CreateTaskOverlay({
   //prettier-ignore
   const durationHourOptions: string[] = [ "00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24",
   ];
-  const [inputError, setInputError] = React.useState<inputErrors>(null);
-  const calendarID = React.useContext(CalendarContext).calendarID;
+  const [inputError, setInputError] = useState<inputErrors>(null);
+  const calendarID = useContext(CalendarContext).calendarID;
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

@@ -1,4 +1,4 @@
-import React from "react";
+import { useState, useContext, useRef, useEffect } from "react";
 import axios from "./config/axiosConfig";
 import { TIME_SLOT_HEIGHT } from "./utils/constants";
 import { LatestDropContext } from "./WeeklyViewPage";
@@ -42,16 +42,19 @@ export function DayBoard({
   dataFetched,
   shiftWeeks,
 }: DayBoardProps) {
-  const thisElemRef = React.useRef<HTMLDivElement>(null);
-  const [tasksList, setTasksList] = React.useState(defaultTasksList);
+  // @ts-ignore
+  const implementLater = shiftWeeks;
 
-  React.useEffect(() => {
+  const thisElemRef = useRef<HTMLDivElement>(null);
+  const [tasksList, setTasksList] = useState(defaultTasksList);
+
+  useEffect(() => {
     if (dataFetched) {
       setTasksList(defaultTasksList);
     }
   }, [dataFetched]);
 
-  const dropContext = React.useContext(LatestDropContext);
+  const dropContext = useContext(LatestDropContext);
 
   // helper functions:
 

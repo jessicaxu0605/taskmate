@@ -1,7 +1,7 @@
 //GOD I JATE TIME ZONES *SOB*
 //FIX THEM LATER I STG THEYRE STILL FUCKED BEYOND BELIEF :(
 
-import React from "react";
+import { useState, useContext, useEffect } from "react";
 import axios from "./config/axiosConfig";
 
 import { TIME_SLOT_HEIGHT } from "./utils/constants";
@@ -55,9 +55,9 @@ function WeekSelectorArrow({
 }
 
 export default function WeeklyView() {
-  const [weeksFromToday, setWeeksFromToday] = React.useState<number>(0);
-  const [weekDays, setWeekDays] = React.useState<Date[]>([]);
-  const [tasksByDay, setTasksByDay] = React.useState<rawTaskFormat[][]>([
+  const [weeksFromToday, setWeeksFromToday] = useState<number>(0);
+  const [weekDays, setWeekDays] = useState<Date[]>([]);
+  const [tasksByDay, setTasksByDay] = useState<rawTaskFormat[][]>([
     [],
     [],
     [],
@@ -66,14 +66,14 @@ export default function WeeklyView() {
     [],
     [],
   ]);
-  const [dataFetched, setDataFetched] = React.useState<boolean>(false);
-  const calendarID = React.useContext(CalendarContext).calendarID;
+  const [dataFetched, setDataFetched] = useState<boolean>(false);
+  const calendarID = useContext(CalendarContext).calendarID;
 
-  React.useEffect(() => {
+  useEffect(() => {
     setWeekDaysState(weeksFromToday);
   }, [weeksFromToday]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setDataFetched(false);
     const startOfWeek = weekDays[0];
     if (!startOfWeek) return;
