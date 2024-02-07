@@ -34,17 +34,14 @@ function RegisterForm() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    console.log("here");
     if (formInputs.password != formInputs.verifyPassword) {
       setInputError("Password fields do not match.");
       return;
     }
 
-    console.log(formInputs);
     axios
       .post("/auth/register/", formInputs)
       .then((result) => {
-        console.log(result);
         userEmailContext.setEmail(result.data.email);
         navigate("/calendars");
       })

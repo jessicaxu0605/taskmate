@@ -1,26 +1,43 @@
 import { useState, useEffect, useRef, useContext } from "react";
 import axios from "./config/axiosConfig";
+import { useNavigate } from "react-router-dom";
+
 import TaskCard from "./TaskCard";
 import { LatestDropContext } from "./WeeklyViewPage";
 import { rawTaskFormat } from "./utils/globalTypes";
 import { CalendarContext } from "./App";
+import { validateAccessToken } from "./utils/authTokenRefresh";
 
 export default function UnscheduledTaskList() {
   const [dataFetched, setDataFetched] = useState<boolean>(false);
   const [tasksList, setTasksList] = useState<rawTaskFormat[]>([]);
   const thisElemRef = useRef<HTMLDivElement>(null);
   const dropContext = useContext(LatestDropContext);
+  const navigate = useNavigate();
 
-  // TEMP:
   const calendarID = useContext(CalendarContext).calendarID;
   function getUnscheduledTasks() {
-    axios
-      .get(`/app/all-unscheduled-tasks/?calendar=${calendarID}`)
-      .then((response) => {
-        setTasksList(response.data);
-        setDataFetched(true);
-      });
+    setDataFetched(false); //on refresh, clear previously rendered components
+    validateAccessToken().then((isValidToken) => {
+      if (isValidToken) {
+        const accessToken = localStorage.getItem("accessToken");
+        axios
+          .get(`/app/all-unscheduled-tasks/?calendar=${calendarID}`, {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            },
+          })
+          .then((response) => {
+            setTasksList(response.data);
+            setDataFetched(true);
+          });
+      } else {
+        navigate("/login");
+      }
+    });
   }
+
   useEffect(() => {
     getUnscheduledTasks();
   }, []);
@@ -34,7 +51,7 @@ export default function UnscheduledTaskList() {
         startDate: "null",
       },
     };
-    const newTask = {
+    const newTask: rawTaskFormat = {
       id: parseInt(e.dataTransfer.getData("id")),
       name: e.dataTransfer.getData("name"),
       dateCreated: null,
@@ -43,7 +60,6 @@ export default function UnscheduledTaskList() {
       duration: e.dataTransfer.getData("duration"),
       startDate: null,
       startTime: null,
-      endTime: null,
       eventTypeID: null, //to be implemented
       properties: null, //to be implemented
       calendarID: null, //field not needed here, only relevant for fetching

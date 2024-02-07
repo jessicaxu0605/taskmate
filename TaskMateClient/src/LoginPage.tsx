@@ -30,24 +30,22 @@ function LoginForm() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    console.log(formInputs);
-
     axios
       .post("/auth/login/", formInputs)
-      .then((result) => {
-        console.log(result);
-        userEmailContext.setEmail(result.data.email);
-        sessionStorage.setItem("activeUserEmail", result.data.email);
+      .then((response) => {
+        userEmailContext.setEmail(response.data.email);
+        sessionStorage.setItem("activeUserEmail", response.data.email);
+        console.log(response.data);
+        localStorage.setItem("accessToken", response.data.accessToken);
+        localStorage.setItem("refreshToken", response.data.refreshToken);
         navigate("/calendars");
       })
       .catch((err) => {
         console.log(err);
-        console.log(err.response.data);
         if (
           err.response.data.email == "Enter a valid email address." ||
           err.response.data == "User Does Not Exist"
         ) {
-          console.log("here");
           setInputError("No account was found with this email.");
         } else if (err.data == "Enter a valid email address.") {
         }

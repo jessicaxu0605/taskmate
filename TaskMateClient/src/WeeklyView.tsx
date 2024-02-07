@@ -3,6 +3,7 @@
 
 import { useState, useContext, useEffect } from "react";
 import axios from "./config/axiosConfig";
+import { useNavigate } from "react-router";
 
 import { TIME_SLOT_HEIGHT } from "./utils/constants";
 import { DayHeader, DayBoard } from "./DayColumn";
@@ -10,6 +11,7 @@ import { RightArrow, LeftArrow } from "./assets/SelectionArrows";
 import { rawTaskFormat } from "./utils/globalTypes";
 import { dateToLocalTimeZoneISOString } from "./utils/FormattingFunctions";
 import { CalendarContext } from "./App";
+import { validateAccessToken } from "./utils/authTokenRefresh";
 
 function GridBackground() {
   function renderGridLines() {
@@ -57,17 +59,11 @@ function WeekSelectorArrow({
 export default function WeeklyView() {
   const [weeksFromToday, setWeeksFromToday] = useState<number>(0);
   const [weekDays, setWeekDays] = useState<Date[]>([]);
-  const [tasksByDay, setTasksByDay] = useState<rawTaskFormat[][]>([
-    [],
-    [],
-    [],
-    [],
-    [],
-    [],
-    [],
-  ]);
+  // prettier-ignore
+  const [tasksByDay, setTasksByDay] = useState<rawTaskFormat[][]>([[], [], [], [], [], [], [],]);
   const [dataFetched, setDataFetched] = useState<boolean>(false);
   const calendarID = useContext(CalendarContext).calendarID;
+  const navigate = useNavigate();
 
   useEffect(() => {
     setWeekDaysState(weeksFromToday);
@@ -84,32 +80,44 @@ export default function WeeklyView() {
     // const startOfWeekParam = startOfWeek.toISOString().slice(0, 10);
     //prettier-ignore
     const startOfWeekParam = dateToLocalTimeZoneISOString(startOfWeek).slice(0, 10);
-
-    // console.log(startOfWeek.toISOString());
-    axios
-      .get(
-        `/app/scheduled-tasks-by-week/?calendar=${calendarID}&startofweek=${startOfWeekParam}`
-      )
-      .then((result) => {
-        const allTasks: rawTaskFormat[] = result.data;
-        const tempTasksByDay: rawTaskFormat[][] = [[], [], [], [], [], [], []];
-        let taskIndex = 0;
-        for (let weekDayIndex = 0; weekDayIndex < 7; weekDayIndex++) {
-          // more shit that I need to fix for timezones
-          const weekDayString = dateToLocalTimeZoneISOString(
-            weekDays[weekDayIndex]
-          ).slice(0, 10);
-          while (
-            taskIndex < allTasks.length &&
-            allTasks[taskIndex].startDate === weekDayString
-          ) {
-            tempTasksByDay[weekDayIndex].push(allTasks[taskIndex]);
-            taskIndex++;
-          }
-        }
-        setTasksByDay(tempTasksByDay);
-        setDataFetched(true);
-      });
+    validateAccessToken().then((isValidToken) => {
+      if (isValidToken) {
+        const accessToken = localStorage.getItem("accessToken");
+        axios
+          .get(
+            `/app/scheduled-tasks-by-week/?calendar=${calendarID}&startofweek=${startOfWeekParam}`,
+            {
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+                "Content-Type": "application/json",
+              },
+            }
+          )
+          .then((result) => {
+            const allTasks: rawTaskFormat[] = result.data;
+            // prettier-ignore
+            const tempTasksByDay: rawTaskFormat[][] = [[], [], [], [], [], [], [],];
+            let taskIndex = 0;
+            for (let weekDayIndex = 0; weekDayIndex < 7; weekDayIndex++) {
+              // more shit that I need to fix for timezones
+              const weekDayString = dateToLocalTimeZoneISOString(
+                weekDays[weekDayIndex]
+              ).slice(0, 10);
+              while (
+                taskIndex < allTasks.length &&
+                allTasks[taskIndex].startDate === weekDayString
+              ) {
+                tempTasksByDay[weekDayIndex].push(allTasks[taskIndex]);
+                taskIndex++;
+              }
+            }
+            setTasksByDay(tempTasksByDay);
+            setDataFetched(true);
+          });
+      } else {
+        navigate("/login");
+      }
+    });
   }, [weekDays, calendarID]);
 
   function shiftWeeks(weekChangeDirection: number) {

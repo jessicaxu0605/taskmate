@@ -1,7 +1,8 @@
 import { useState, useContext } from "react";
 import axios from "./config/axiosConfig";
-// import { rawTaskFormat } from "./utils/globalTypes";
+import { useNavigate } from "react-router-dom";
 import { CalendarContext } from "./App";
+import { validateAccessToken } from "./utils/authTokenRefresh";
 
 type FormInputs = {
   name: string | null;
@@ -65,6 +66,7 @@ export default function ModifyTaskOverlay({
   const durationHourOptions: string[] = ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24"];
   const [inputError, setInputError] = useState<inputErrors>(null);
   const calendarID = useContext(CalendarContext).calendarID;
+  const navigate = useNavigate();
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -117,26 +119,50 @@ export default function ModifyTaskOverlay({
       closeOverlay(null);
       return;
     }
-
-    axios
-      .put("/app/task/", reqBody)
-      .then(() => {
-        closeOverlay(reqBody);
-      })
-      .catch((err) => {
-        if (err.response.status == 500) {
-          //change this once I get a more specific error in place
-          setInputError(
-            "error: scheduled time conflicts with a pre-existing task"
-          );
-        }
-      });
+    validateAccessToken().then((isValidToken) => {
+      if (isValidToken) {
+        const accessToken = localStorage.getItem("accessToken");
+        axios
+          .put("/app/task/", reqBody, {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            },
+          })
+          .then(() => {
+            closeOverlay(reqBody);
+          })
+          .catch((err) => {
+            if (err.response.status == 500) {
+              //change this once I get a more specific error in place
+              setInputError(
+                "error: scheduled time conflicts with a pre-existing task"
+              );
+            }
+          });
+      } else {
+        navigate("/login");
+      }
+    });
   }
 
   function deleteTask() {
-    console.log(taskID);
-    axios.delete(`/app/task/?task=${taskID}`).then(() => {
-      killTaskCard();
+    validateAccessToken().then((isValidToken) => {
+      if (isValidToken) {
+        const accessToken = localStorage.getItem("accessToken");
+        axios
+          .delete(`/app/task/?task=${taskID}`, {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            },
+          })
+          .then(() => {
+            killTaskCard();
+          });
+      } else {
+        navigate("/login");
+      }
     });
   }
 

@@ -1,0 +1,18 @@
+validateAccessToken().then((isValidToken) => {
+      if (isValidToken) {
+        const accessToken = localStorage.getItem("accessToken");
+            {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            },
+            }
+      } else {
+        navigate("/login");
+      }
+    });
+
+
+import { useNavigate } from 'react-router-dom';
+const navigate = useNavigate();
+

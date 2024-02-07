@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from rest_framework.permissions import IsAuthenticated
 from . import models, serializers
 
@@ -38,3 +38,15 @@ class Logout(APIView):
         token = RefreshToken(refresh)
         token.blacklist()
         return Response({'Logged out'}, status=205)
+
+class TokenRefresh(APIView):
+    def post(self, request):
+        try:
+            refreshToken = request.data.get("refreshToken")
+            if not refreshToken:
+                return Response({'error': 'Refresh token not provided'}, status=400)
+            refresh = RefreshToken(refreshToken)
+            newAccessToken = str(refresh.access_token)
+            return Response({'accessToken': newAccessToken}, status=200)
+        except TokenError:
+            return Response({'error': TokenError}, status=401)

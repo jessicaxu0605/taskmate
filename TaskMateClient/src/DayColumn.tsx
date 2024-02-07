@@ -1,9 +1,11 @@
 import { useState, useContext, useRef, useEffect } from "react";
 import axios from "./config/axiosConfig";
+import { useNavigate } from "react-router-dom";
 import { TIME_SLOT_HEIGHT } from "./utils/constants";
 import { LatestDropContext } from "./WeeklyViewPage";
 import { rawTaskFormat } from "./utils/globalTypes";
 import TaskCard from "./TaskCard";
+import { validateAccessToken } from "./utils/authTokenRefresh";
 
 type DayBoardProps = {
   date: Date;
@@ -47,6 +49,7 @@ export function DayBoard({
 
   const thisElemRef = useRef<HTMLDivElement>(null);
   const [tasksList, setTasksList] = useState(defaultTasksList);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (dataFetched) {
@@ -115,15 +118,27 @@ export function DayBoard({
       calendarID: null, //field not needed here, only relevant for fetching
     };
 
-    axios
-      .put("/app/task/", reqBody)
-      .then(() => {
-        setTasksList((tasksList) => [...tasksList, newTask]);
-        dropContext.setDrop({ completion: "complete" });
-      })
-      .catch(() => {
-        dropContext.setDrop({ completion: "failed" });
-      });
+    validateAccessToken().then((isValidToken) => {
+      if (isValidToken) {
+        const accessToken = localStorage.getItem("accessToken");
+        axios
+          .put("/app/task/", reqBody, {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            },
+          })
+          .then(() => {
+            setTasksList((tasksList) => [...tasksList, newTask]);
+            dropContext.setDrop({ completion: "complete" });
+          })
+          .catch(() => {
+            dropContext.setDrop({ completion: "failed" });
+          });
+      } else {
+        navigate("/login");
+      }
+    });
   }
 
   function handleDragOver(e: React.DragEvent<HTMLDivElement>) {

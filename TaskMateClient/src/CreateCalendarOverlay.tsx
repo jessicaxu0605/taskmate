@@ -2,6 +2,7 @@ import { useState, useContext } from "react";
 import axios from "./config/axiosConfig";
 import { CalendarContext, UserEmailContext } from "./App";
 import { useNavigate } from "react-router-dom";
+import { validateAccessToken } from "./utils/authTokenRefresh";
 
 type FormInputs = {
   name: string | null;
@@ -36,11 +37,24 @@ export default function CreateTaskOverlay({
       name: formInputs.name,
       ownerEmail: userEmail,
     };
-    axios.post("/app/new-calendar/", reqBody).then((response) => {
-      console.log(response);
-      calendarContext.setCalendarID(response.data.calendarID);
-      closeOverlay();
-      navigate("/weekly-view");
+    validateAccessToken().then((isValidToken) => {
+      if (isValidToken) {
+        const accessToken = localStorage.getItem("accessToken");
+        axios
+          .post("/app/new-calendar/", reqBody, {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            },
+          })
+          .then((response) => {
+            calendarContext.setCalendarID(response.data.calendarID);
+            closeOverlay();
+            navigate("/weekly-view");
+          });
+      } else {
+        navigate("/login");
+      }
     });
   }
 

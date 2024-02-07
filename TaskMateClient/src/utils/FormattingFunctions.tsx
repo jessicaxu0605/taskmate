@@ -85,15 +85,6 @@ export function dateToLocalTimeZoneISOString(date: Date) {
   return moment(date).tz(timeZone).format();
 }
 
-// export function getHourIntFromHHMMSSTime(time: string) {
-//   const timeParts = time.split(":");
-//   return parseInt(timeParts[0]);
-// }
-// export function getMinuteIntFromHHMMSSTime(time: string) {
-//   const timeParts = time.split(":");
-//   return parseInt(timeParts[1]);
-// }
-
 export function getTimeInNumOf15Mins(time: string) {
   const timeParts = time.split(":");
   return 4 * parseInt(timeParts[0]) + parseInt(timeParts[1]) / 15;

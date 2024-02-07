@@ -1,6 +1,8 @@
 import { useState, useContext } from "react";
+import { useNavigate } from "react-router";
 import axios from "./config/axiosConfig";
 import { CalendarContext } from "./App";
+import { validateAccessToken } from "./utils/authTokenRefresh";
 
 // type FormInputs = {
 //   name: string | null;
@@ -34,6 +36,7 @@ export default function CreateTaskOverlay({
   ];
   const [inputError, setInputError] = useState<inputErrors>(null);
   const calendarID = useContext(CalendarContext).calendarID;
+  const navigate = useNavigate();
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -56,8 +59,22 @@ export default function CreateTaskOverlay({
       duration:
         formInputs.durationHour + ":" + formInputs.durationMinute + ":00",
     };
-    axios.post("/app/task/", reqBody).then(() => {
-      closeOverlay();
+    validateAccessToken().then((isValidToken) => {
+      if (isValidToken) {
+        const accessToken = localStorage.getItem("accessToken");
+        axios
+          .post("/app/task/", reqBody, {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            },
+          })
+          .then(() => {
+            closeOverlay();
+          });
+      } else {
+        navigate("/login");
+      }
     });
   }
 

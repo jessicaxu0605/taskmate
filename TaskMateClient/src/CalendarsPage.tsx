@@ -1,8 +1,11 @@
 import { useState, useContext, useEffect } from "react";
 import axios from "./config/axiosConfig";
+import { useNavigate } from "react-router";
+
 import { UserEmailContext } from "./App";
 import CalendarCard from "./CalendarCard";
 import CreateCalendarOverlay from "./CreateCalendarOverlay";
+import { validateAccessToken } from "./utils/authTokenRefresh";
 
 type Calendar = {
   id: number;
@@ -19,18 +22,31 @@ export default function CalendarsPage() {
   const [ownedEmails, setOwnedEmails] = useState<Calendar[]>([]);
   const [createCalendarOverlayOpen, setCreateCalendarOverlayOpen] =
     useState<boolean>(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    axios
-      .get(`/app/user-calendars/?user=${userEmail}`) //replace with userEmail later
-      .then((response) => {
-        console.log(response.data);
-        setOwnedEmails(response.data);
-        setDataFetched(true);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+    setDataFetched(false);
+    validateAccessToken().then((isValidToken) => {
+      if (isValidToken) {
+        const accessToken = localStorage.getItem("accessToken");
+        axios
+          .get(`/app/user-calendars/?user=${userEmail}`, {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            },
+          }) //replace with userEmail later
+          .then((response) => {
+            setOwnedEmails(response.data);
+            setDataFetched(true);
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+      } else {
+        navigate("/login");
+      }
+    });
   }, []);
 
   function handleClick() {

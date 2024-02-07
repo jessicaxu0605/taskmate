@@ -135,7 +135,6 @@ export default function TaskCard({id, name, dueTime, dueDate, duration, isSchedu
   }
 
   function killTaskCard() {
-    console.log("here")
     setIsDead(true);
   }
 
