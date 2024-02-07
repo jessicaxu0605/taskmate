@@ -1,6 +1,3 @@
-//GOD I JATE TIME ZONES *SOB*
-//FIX THEM LATER I STG THEYRE STILL FUCKED BEYOND BELIEF :(
-
 import { useState, useContext, useEffect } from "react";
 import axios from "./config/axiosConfig";
 import { useNavigate } from "react-router";
@@ -8,8 +5,7 @@ import { useNavigate } from "react-router";
 import { TIME_SLOT_HEIGHT } from "./utils/constants";
 import { DayHeader, DayBoard } from "./DayColumn";
 import { RightArrow, LeftArrow } from "./assets/SelectionArrows";
-import { rawTaskFormat } from "./utils/globalTypes";
-import { dateToLocalTimeZoneISOString } from "./utils/FormattingFunctions";
+import { rawTaskFormat, workingTaskFormat } from "./utils/globalTypes";
 import { CalendarContext } from "./App";
 import { validateAccessToken } from "./utils/authTokenRefresh";
 
@@ -60,7 +56,7 @@ export default function WeeklyView() {
   const [weeksFromToday, setWeeksFromToday] = useState<number>(0);
   const [weekDays, setWeekDays] = useState<Date[]>([]);
   // prettier-ignore
-  const [tasksByDay, setTasksByDay] = useState<rawTaskFormat[][]>([[], [], [], [], [], [], [],]);
+  const [tasksByDay, setTasksByDay] = useState<workingTaskFormat[][]>([[], [], [], [], [], [], [],]);
   const [dataFetched, setDataFetched] = useState<boolean>(false);
   const calendarID = useContext(CalendarContext).calendarID;
   const navigate = useNavigate();
@@ -74,18 +70,15 @@ export default function WeeklyView() {
     const startOfWeek = weekDays[0];
     if (!startOfWeek) return;
 
-    // scars of the timezone struggle:
-    // const startOfWeekParts = startOfWeek.toLocaleString().split('/');
-    // const startOfWeekParam = startOfWeekParts[2].slice(0, 4) + "-" + startOfWeekParts[0] + "-" + startOfWeekParts[1];
-    // const startOfWeekParam = startOfWeek.toISOString().slice(0, 10);
-    //prettier-ignore
-    const startOfWeekParam = dateToLocalTimeZoneISOString(startOfWeek).slice(0, 10);
+    startOfWeek.setHours(0, 0, 0, 0); //set to start of day before converting to UTC
+    const startOfWeekParam_UTC = startOfWeek.toISOString().slice(0, 10);
+
     validateAccessToken().then((isValidToken) => {
       if (isValidToken) {
         const accessToken = localStorage.getItem("accessToken");
         axios
           .get(
-            `/app/scheduled-tasks-by-week/?calendar=${calendarID}&startofweek=${startOfWeekParam}`,
+            `/app/scheduled-tasks-by-week/?calendar=${calendarID}&startofweek=${startOfWeekParam_UTC}`,
             {
               headers: {
                 Authorization: `Bearer ${accessToken}`,
@@ -94,18 +87,26 @@ export default function WeeklyView() {
             }
           )
           .then((result) => {
-            const allTasks: rawTaskFormat[] = result.data;
+            const allTasksRaw: rawTaskFormat[] = result.data;
+            const allTasks: workingTaskFormat[] = allTasksRaw.map((val) => {
+              return {
+                id: val.id,
+                name: val.name,
+                dueDateTime: new Date(val.dueDate + "T" + val.dueTime + "Z"),
+                duration: val.duration,
+                startDateTime: new Date(
+                  val.startDate + "T" + val.startTime + "Z"
+                ),
+              };
+            });
             // prettier-ignore
-            const tempTasksByDay: rawTaskFormat[][] = [[], [], [], [], [], [], [],];
+            const tempTasksByDay: workingTaskFormat[][] = [[], [], [], [], [], [], [],];
             let taskIndex = 0;
             for (let weekDayIndex = 0; weekDayIndex < 7; weekDayIndex++) {
-              // more shit that I need to fix for timezones
-              const weekDayString = dateToLocalTimeZoneISOString(
-                weekDays[weekDayIndex]
-              ).slice(0, 10);
               while (
                 taskIndex < allTasks.length &&
-                allTasks[taskIndex].startDate === weekDayString
+                (allTasks[taskIndex].startDateTime as Date).toDateString() ===
+                  weekDays[weekDayIndex].toDateString()
               ) {
                 tempTasksByDay[weekDayIndex].push(allTasks[taskIndex]);
                 taskIndex++;
@@ -179,6 +180,15 @@ export default function WeeklyView() {
     return timeLabels;
   }
 
+  function DateToReadableDate(date: Date) {
+    const options: Intl.DateTimeFormatOptions = {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    };
+    return date.toLocaleString("en-US", options);
+  }
+
   return (
     <>
       <div className="flex flex-row justify-center align-middle pb-10 pt-2 px-8">
@@ -191,9 +201,9 @@ export default function WeeklyView() {
           className="text-xl text-slate-100 font-bold pt-2"
         >
           {weekDays[0]
-            ? `Week of ${weekDays[0].toDateString().slice(4)} – ${weekDays[6]
-                .toDateString()
-                .slice(4)}`
+            ? `Week of ${DateToReadableDate(
+                weekDays[0]
+              )} – ${DateToReadableDate(weekDays[6])}`
             : ""}
         </h2>
         <WeekSelectorArrow

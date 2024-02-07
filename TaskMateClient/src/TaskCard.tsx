@@ -1,8 +1,4 @@
 import { useState, useRef, useEffect, useContext } from "react";
-import {
-  dateTimeToDateAndTimeString,
-  getTimeInNumOf15Mins,
-} from "./utils/FormattingFunctions";
 import { TIME_SLOT_HEIGHT } from "./utils/constants";
 import { LatestDropContext } from "./WeeklyViewPage";
 import ModifyTaskOverlay, { CloseOverlayArgs } from "./ModifyTaskOverlay";
@@ -10,34 +6,28 @@ import ModifyTaskOverlay, { CloseOverlayArgs } from "./ModifyTaskOverlay";
 export type TaskProps = {
   id: number;
   name: string;
-  dueTime: string;
-  dueDate: string;
+  dueDateTime: Date;
   duration: string;
   isScheduledDefault: boolean;
-  startTime: string | null;
-  startDate: string | null;
+  startDateTime: Date | null;
 };
 
 export type ModifiableTaskData = {
   name: string;
-  dueTime: string;
-  dueDate: string;
+  dueDateTime: Date;
   duration: string;
-  startTime: string | null;
-  startDate: string | null;
+  startDateTime: Date | null;
 };
 
 const DRAG_OFFSET = 16;
 
 //prettier-ignore
-export default function TaskCard({id, name, dueTime, dueDate, duration, isScheduledDefault, startTime, startDate}: TaskProps) {
+export default function TaskCard({id, name, dueDateTime, duration, isScheduledDefault, startDateTime}: TaskProps) {
   const [taskData, setTaskData] = useState<ModifiableTaskData>({
     name: name,
-    dueTime: dueTime,
-    dueDate: dueDate,
+    dueDateTime: dueDateTime,
     duration: duration,
-    startTime: startTime,
-    startDate: startDate,
+    startDateTime: startDateTime
   });
   const thisElemRef = useRef<HTMLDivElement>(null);
   const dropContext = useContext(LatestDropContext);
@@ -65,11 +55,12 @@ export default function TaskCard({id, name, dueTime, dueDate, duration, isSchedu
       target.style.top = `${e.clientY - boundingRect.y - DRAG_OFFSET}px`;
     }
 
-    e.dataTransfer.setData("cardID", target.id);
+    // e.dataTransfer.setData("cardID", target.id);
     e.dataTransfer.setData("id", id.toString());
     e.dataTransfer.setData("name", taskData.name);
-    e.dataTransfer.setData("dueTime", taskData.dueTime);
-    e.dataTransfer.setData("dueDate", taskData.dueDate);
+    // e.dataTransfer.setData("dueTime", taskData.dueTime);
+    // e.dataTransfer.setData("dueDate", taskData.dueDate);
+    e.dataTransfer.setData("dueDateTimeISOString", taskData.dueDateTime.toISOString());
     e.dataTransfer.setData("duration", taskData.duration);
     e.dataTransfer.setDragImage(target, DRAG_OFFSET, DRAG_OFFSET);
 
@@ -111,12 +102,39 @@ export default function TaskCard({id, name, dueTime, dueDate, duration, isSchedu
     setIsDragging(false);
   }, [dropContext.drop]);
 
+
   function getTop() {
-    const startTimeIn15Mins = getTimeInNumOf15Mins(
-      taskData.startTime as string
-    ); //function will only be called if startTime is defined
+    if (!startDateTime) return;
+    const hours = startDateTime.getHours();
+    const minutes = startDateTime.getMinutes();
+    const startTimeIn15Mins = (hours * 4) + Math.floor(minutes / 15);
+    console.log (startDateTime);
     const top = startTimeIn15Mins * TIME_SLOT_HEIGHT;
     return `${top}px`;
+  }
+
+  function getHeight() {
+    const timeParts = taskData.duration.split(":");
+    const durationIn15Mins =
+      4 * parseInt(timeParts[0]) + parseInt(timeParts[1]) / 15;
+    const height = durationIn15Mins  * TIME_SLOT_HEIGHT;
+    return `${height}px`;
+  }
+
+  function DateToReadableDateTime(date: Date) {
+    const dateFormatOptions: Intl.DateTimeFormatOptions = {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      weekday: "short",
+    };
+    const timeFormatOptions: Intl.DateTimeFormatOptions = {
+      hour: "numeric",
+      minute: "2-digit",
+    };
+    const formattedDate = date.toLocaleString("en-US", dateFormatOptions);
+    const formattedTime = date.toLocaleString("en-US", timeFormatOptions);
+    return formattedDate + " at " + formattedTime;
   }
 
   //Modify overlay functionality ------------------------------------------------------------------
@@ -125,9 +143,8 @@ export default function TaskCard({id, name, dueTime, dueDate, duration, isSchedu
     if (result != null) {
       const newTaskData = taskData;
       for (const key in result.newData) {
-        newTaskData[key as keyof ModifiableTaskData] = result.newData[
-          key
-        ] as string;
+        // prettier-ignore
+        newTaskData[key as keyof ModifiableTaskData] = result.newData[key];
       }
       setTaskData(newTaskData);
     }
@@ -146,11 +163,8 @@ export default function TaskCard({id, name, dueTime, dueDate, duration, isSchedu
         <ModifyTaskOverlay
           taskID={id}
           name={taskData.name}
-          dueTime={taskData.dueTime}
-          dueDate={taskData.dueDate}
+          dueDateTime={taskData.dueDateTime}
           duration={taskData.duration}
-          startTime={taskData.startTime}
-          startDate={taskData.startDate}
           closeOverlay={closeOverlay}
           killTaskCard={killTaskCard}
         />
@@ -166,12 +180,7 @@ export default function TaskCard({id, name, dueTime, dueDate, duration, isSchedu
           setModifyTaskOverlayOpen(true);
         }}
         style={{
-          height:
-            isScheduled || isDragging
-              ? `${
-                  getTimeInNumOf15Mins(taskData.duration) * TIME_SLOT_HEIGHT
-                }px`
-              : "auto",
+          height: isScheduled || isDragging ? getHeight() : "auto",
           width: isDragging ? "8vw" : isScheduled ? "100%" : "auto",
           top: isScheduledDefault ? getTop() : "0",
           position: isScheduledDefault ? "absolute" : "static",
@@ -181,9 +190,7 @@ export default function TaskCard({id, name, dueTime, dueDate, duration, isSchedu
         className={`${isScheduled || isDragging ? `px-1` : `p-2 m-1`} 
         bg-slate-700 br-10 text-left rounded-lg border-slate-600 border-2 z-10 cursor-grab overflow-hidden text-slate-100`}
       >
-        <div
-          className={`overflow-hidden`}
-        >
+        <div className={`overflow-hidden`}>
           <h3
             style={isScheduled || isDragging ? { height: "100%" } : {}}
             className="font-bold text-sm"
@@ -196,7 +203,8 @@ export default function TaskCard({id, name, dueTime, dueDate, duration, isSchedu
           >
             due{" "}
             <strong>
-              {dateTimeToDateAndTimeString(taskData.dueDate, taskData.dueTime)}
+              {/* fix this formatting actually later */}
+              {DateToReadableDateTime(taskData.dueDateTime)}
             </strong>
           </p>
           <p

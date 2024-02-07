@@ -4,13 +4,13 @@ import axios from "./config/axiosConfig";
 import { CalendarContext } from "./App";
 import { validateAccessToken } from "./utils/authTokenRefresh";
 
-// type FormInputs = {
-//   name: string | null;
-//   dueDate: string | null;
-//   dueTime: string | null;
-//   durationHour: string | null;
-//   durationMinute: string | null;
-// };
+type FormInputs = {
+  name: string | null;
+  dueDate: string | null;
+  dueTime: string | null;
+  durationHour: string;
+  durationMinute: string;
+};
 
 type CreateTaskOverlayProps = {
   closeOverlay: () => void;
@@ -24,7 +24,7 @@ type inputErrors =
 export default function CreateTaskOverlay({
   closeOverlay,
 }: CreateTaskOverlayProps) {
-  const [formInputs, setFormInputs] = useState({
+  const [formInputs, setFormInputs] = useState<FormInputs>({
     name: null,
     dueDate: null,
     dueTime: null,
@@ -32,8 +32,7 @@ export default function CreateTaskOverlay({
     durationMinute: "00",
   });
   //prettier-ignore
-  const durationHourOptions: string[] = [ "00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24",
-  ];
+  const durationHourOptions: number[] = Array.from({length: 25}, (_, index)=> index );
   const [inputError, setInputError] = useState<inputErrors>(null);
   const calendarID = useContext(CalendarContext).calendarID;
   const navigate = useNavigate();
@@ -51,13 +50,21 @@ export default function CreateTaskOverlay({
       return;
     }
 
+    const dueDateTime = new Date(formInputs.dueDate + "T" + formInputs.dueTime); //no Z at end of string for local time
+    const ISOString_UTC = dueDateTime.toISOString();
+    const dueDate_UTC = ISOString_UTC.slice(0, 10);
+    const dueTime_UTC = ISOString_UTC.slice(11, 19);
+
     const reqBody = {
       calendarID: calendarID,
       name: formInputs.name,
-      dueDate: formInputs.dueDate,
-      dueTime: formInputs.dueTime + ":00",
+      dueDate: dueDate_UTC,
+      dueTime: dueTime_UTC,
       duration:
-        formInputs.durationHour + ":" + formInputs.durationMinute + ":00",
+        formInputs.durationHour.padStart(2, "0") +
+        ":" +
+        formInputs.durationMinute +
+        ":00",
     };
     validateAccessToken().then((isValidToken) => {
       if (isValidToken) {
@@ -182,8 +189,8 @@ export default function CreateTaskOverlay({
                   className={inputStyles + " text-2xl ml-1"}
                 >
                   {durationHourOptions.map((val) => (
-                    <option key={val} value={val}>
-                      {parseInt(val)}
+                    <option key={val} value={val.toString()}>
+                      {val}
                     </option>
                   ))}
                 </select>

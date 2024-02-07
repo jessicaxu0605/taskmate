@@ -35,7 +35,6 @@ function LoginForm() {
       .then((response) => {
         userEmailContext.setEmail(response.data.email);
         sessionStorage.setItem("activeUserEmail", response.data.email);
-        console.log(response.data);
         localStorage.setItem("accessToken", response.data.accessToken);
         localStorage.setItem("refreshToken", response.data.refreshToken);
         navigate("/calendars");

@@ -8,23 +8,22 @@ type FormInputs = {
   name: string | null;
   dueDate: string | null;
   dueTime: string | null;
-  durationHour: string | null;
-  durationMinute: string | null;
-  startDate: string | null;
-  startTime: string | null;
+  durationHour: string;
+  durationMinute: string;
 };
 
 type ModifyTaskOverlayProps = {
   taskID: number;
   name: string;
-  dueDate: string;
-  dueTime: string;
+  dueDateTime: Date;
   duration: string;
-  startDate: string | null;
-  startTime: string | null;
   closeOverlay: (result: CloseOverlayArgs) => void;
   killTaskCard: () => void;
 };
+
+export type CloseOverlayArgs = {
+  [key: string]: any;
+} | null;
 
 type FormRequestBody = {
   taskID: number;
@@ -34,7 +33,7 @@ type FormRequestBody = {
   };
 };
 
-export type CloseOverlayArgs = FormRequestBody | null;
+// export type CloseOverlayArgs = FormRequestBody | null;
 
 type inputErrors =
   | "error: time needed to complete task cannot be 0"
@@ -45,25 +44,29 @@ type inputErrors =
 export default function ModifyTaskOverlay({
   taskID,
   name,
-  dueDate,
-  dueTime,
+  dueDateTime,
   duration,
-  startDate,
-  startTime,
   closeOverlay,
   killTaskCard,
 }: ModifyTaskOverlayProps) {
+  const dueYear = dueDateTime.getFullYear().toString();
+  const dueMonth = (dueDateTime.getMonth() + 1).toString().padStart(2, "0");
+  const dueDay = dueDateTime.getDate().toString().padStart(2, "0");
   const [formInputs, setFormInputs] = useState<FormInputs>({
     name: name,
-    dueDate: dueDate,
-    dueTime: dueTime,
-    durationHour: duration.slice(0, 2),
+    dueDate: dueYear + "-" + dueMonth + "-" + dueDay,
+    dueTime:
+      dueDateTime.getHours().toString().padStart(2, "0") +
+      ":" +
+      dueDateTime.getMinutes().toString().padStart(2, "0"),
+    durationHour: parseInt(duration.slice(0, 2)).toString(),
     durationMinute: duration.slice(3, 5),
-    startDate: startDate,
-    startTime: startTime,
   });
   //prettier-ignore
-  const durationHourOptions: string[] = ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24"];
+  const durationHourOptions: number[] = Array.from(
+    { length: 25 },
+    (_, index) => index
+  );
   const [inputError, setInputError] = useState<inputErrors>(null);
   const calendarID = useContext(CalendarContext).calendarID;
   const navigate = useNavigate();
@@ -85,33 +88,33 @@ export default function ModifyTaskOverlay({
       calendarID: calendarID as number,
       newData: {},
     };
-    const formInputDuration =
-      formInputs.durationHour + ":" + formInputs.durationMinute + ":00";
+    const closeOverlayArgs: CloseOverlayArgs = {};
 
     let isModified: boolean = false;
 
     if (formInputs.name != name) {
       reqBody.newData["name"] = formInputs.name;
+      closeOverlayArgs["name"] = formInputs.name;
       isModified = true;
     }
-    if (formInputs.dueDate != dueDate) {
-      reqBody.newData["dueDate"] = formInputs.dueDate;
+    const newDueDateTime = new Date(
+      formInputs.dueDate + "T" + formInputs.dueTime
+    ); //no Z at end of string for local time
+    if (newDueDateTime.getTime() != dueDateTime.getTime()) {
+      const ISOString_UTC = newDueDateTime.toISOString();
+      reqBody.newData["dueDate"] = ISOString_UTC.slice(0, 10);
+      reqBody.newData["dueTime"] = ISOString_UTC.slice(11, 19);
+      closeOverlayArgs["dueDateTime"] = newDueDateTime;
       isModified = true;
     }
-    if (formInputs.dueTime != dueTime) {
-      reqBody.newData["dueTime"] = formInputs.dueTime + ":00";
-      isModified = true;
-    }
-    if (formInputDuration != duration) {
-      reqBody.newData["duration"] = formInputDuration;
-      isModified = true;
-    }
-    if (formInputs.startDate != startDate) {
-      reqBody.newData["startDate"] = formInputs.startDate;
-      isModified = true;
-    }
-    if (formInputs.startTime != startTime) {
-      reqBody.newData["startTime"] = formInputs.startTime + ":00";
+    const newDuration =
+      formInputs.durationHour.padStart(2, "0") +
+      ":" +
+      formInputs.durationMinute +
+      ":00";
+    if (newDuration != duration) {
+      reqBody.newData["duration"] = newDuration;
+      closeOverlayArgs["duration"] = newDuration;
       isModified = true;
     }
 
@@ -146,7 +149,8 @@ export default function ModifyTaskOverlay({
     });
   }
 
-  function deleteTask() {
+  function deleteTask(e: React.FormEvent) {
+    e.preventDefault();
     validateAccessToken().then((isValidToken) => {
       if (isValidToken) {
         const accessToken = localStorage.getItem("accessToken");
@@ -271,8 +275,8 @@ export default function ModifyTaskOverlay({
                     className={inputStyles + " text-2xl ml-1"}
                   >
                     {durationHourOptions.map((val) => (
-                      <option key={val} value={val}>
-                        {parseInt(val)}
+                      <option key={val} value={val.toString()}>
+                        {val}
                       </option>
                     ))}
                   </select>
@@ -293,40 +297,6 @@ export default function ModifyTaskOverlay({
                 </label>
               </div>
             </div>
-            {/* <hr
-              style={{ borderWidth: "1px" }}
-              className="border-slate-400 m-2 my-6"
-            />
-            <div className="flex flex-row justify-evenly">
-              <div style={{ width: "50%" }} className="m-4">
-                <label>
-                  Scheduled Start Date: <br />
-                  <input
-                    required
-                    name="startDate"
-                    type="date"
-                    value={formInputs.startDate || ""}
-                    onChange={handleInputChange}
-                    style={{ width: "100%" }}
-                    className={inputStyles + " text-2xl"}
-                  />
-                </label>
-              </div>
-              <div style={{ width: "50%" }} className="m-4">
-                <label>
-                  Scheduled Start Time: <br />
-                  <input
-                    required
-                    name="startTime"
-                    type="time"
-                    value={formInputs.startTime || ""}
-                    onChange={handleInputChange}
-                    style={{ width: "100%" }}
-                    className={inputStyles + " text-2xl"}
-                  />
-                </label>
-              </div>
-            </div> */}
             {inputError == null ? null : (
               <div className="flex justify-center m-2">
                 <h2 className="text-red-600">{inputError}</h2>

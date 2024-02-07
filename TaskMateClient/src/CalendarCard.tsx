@@ -1,7 +1,6 @@
 import { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { CalendarContext } from "./App";
-import { ISOStringToDateAndTimeString } from "./utils/FormattingFunctions";
 
 type CalendarCardProps = {
   id: number;
@@ -23,6 +22,28 @@ export default function CalendarCard({
 
   const navigate = useNavigate();
   const calendarContext = useContext(CalendarContext);
+
+  function ISOStringToDateAndTimeString(ISOString: string) {
+    const inputAsDateObject = new Date(ISOString);
+    const dateFormatOptions: Intl.DateTimeFormatOptions = {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    };
+    const timeFormatOptions: Intl.DateTimeFormatOptions = {
+      hour: "numeric",
+      minute: "2-digit",
+    };
+    const formattedDate = inputAsDateObject.toLocaleString(
+      "en-US",
+      dateFormatOptions
+    );
+    const formattedTime = inputAsDateObject.toLocaleString(
+      "en-US",
+      timeFormatOptions
+    );
+    return formattedDate + ", " + formattedTime;
+  }
 
   function handleClick() {
     calendarContext.setCalendarID(id);

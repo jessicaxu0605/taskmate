@@ -4,13 +4,13 @@ import { useNavigate } from "react-router-dom";
 
 import TaskCard from "./TaskCard";
 import { LatestDropContext } from "./WeeklyViewPage";
-import { rawTaskFormat } from "./utils/globalTypes";
+import { rawTaskFormat, workingTaskFormat } from "./utils/globalTypes";
 import { CalendarContext } from "./App";
 import { validateAccessToken } from "./utils/authTokenRefresh";
 
 export default function UnscheduledTaskList() {
   const [dataFetched, setDataFetched] = useState<boolean>(false);
-  const [tasksList, setTasksList] = useState<rawTaskFormat[]>([]);
+  const [tasksList, setTasksList] = useState<workingTaskFormat[]>([]);
   const thisElemRef = useRef<HTMLDivElement>(null);
   const dropContext = useContext(LatestDropContext);
   const navigate = useNavigate();
@@ -29,7 +29,18 @@ export default function UnscheduledTaskList() {
             },
           })
           .then((response) => {
-            setTasksList(response.data);
+            const unscheduledTasksRaw: rawTaskFormat[] = response.data;
+            const unscheduledTasks: workingTaskFormat[] =
+              unscheduledTasksRaw.map((val) => {
+                return {
+                  id: val.id,
+                  name: val.name,
+                  dueDateTime: new Date(val.dueDate + "T" + val.dueTime + "Z"),
+                  duration: val.duration,
+                  startDateTime: null,
+                };
+              });
+            setTasksList(unscheduledTasks);
             setDataFetched(true);
           });
       } else {
@@ -51,19 +62,14 @@ export default function UnscheduledTaskList() {
         startDate: "null",
       },
     };
-    const newTask: rawTaskFormat = {
+    const newTask: workingTaskFormat = {
       id: parseInt(e.dataTransfer.getData("id")),
       name: e.dataTransfer.getData("name"),
-      dateCreated: null,
-      dueDate: e.dataTransfer.getData("dueDate"),
-      dueTime: e.dataTransfer.getData("dueTime"),
+      dueDateTime: new Date(e.dataTransfer.getData("dueDateTimeISOString")),
       duration: e.dataTransfer.getData("duration"),
-      startDate: null,
-      startTime: null,
-      eventTypeID: null, //to be implemented
-      properties: null, //to be implemented
-      calendarID: null, //field not needed here, only relevant for fetching
+      startDateTime: null,
     };
+
     axios
       .put("/app/task/", reqBody)
       .then(() => {
@@ -115,12 +121,10 @@ export default function UnscheduledTaskList() {
                 key={index}
                 id={val.id}
                 name={val.name}
-                dueTime={val.dueTime}
-                dueDate={val.dueDate}
+                dueDateTime={val.dueDateTime}
                 duration={val.duration}
                 isScheduledDefault={false}
-                startTime={null}
-                startDate={null}
+                startDateTime={null}
               />
             ))
           : null}

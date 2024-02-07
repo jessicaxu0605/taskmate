@@ -78,9 +78,8 @@ class OneTask(APIView):
 
     def post(self, request):
         data = request.data
-        # this field has default value of 23:00:00 if not specified
-        if data.get('dueTime'):
-            data['dueTime'] = datetime.strptime(data.get('dueTime'), '%H:%M:%S').time()
+
+        data['dueTime'] = datetime.strptime(data.get('dueTime'), '%H:%M:%S').time()
         data['dueDate'] = datetime.strptime(data.get('dueDate'), '%Y-%m-%d').date()
         duration_parts = data.get('duration').split(':')
         data['duration'] = timedelta(hours=int(duration_parts[0]), minutes=int(duration_parts[1]), seconds=int(duration_parts[2]))

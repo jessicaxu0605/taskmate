@@ -11,3 +11,11 @@ export type rawTaskFormat = {
   properties: string | null; //to be implemented
   calendarID: number | null;
 };
+
+export type workingTaskFormat = {
+  id: number;
+  name: string;
+  dueDateTime: Date;
+  duration: string;
+  startDateTime: Date | null;
+};

@@ -9,8 +9,6 @@ function accessTokenExpired() {
   if (!decodedToken || !decodedToken.exp) return true;
 
   if (decodedToken.exp < Math.floor(Date.now() / 1000)) return true;
-
-  console.log(accessToken);
   return false;
 }
 
