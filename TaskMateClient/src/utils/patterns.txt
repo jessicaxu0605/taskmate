@@ -1,0 +1,27 @@
+STYLING:
+colours:
+1.  background: slate-900
+2.  text: slate-100
+3.  buttons: violet-700
+4.  errors/warnings: red-700
+5.  visual block borders: slate-100
+6.  faint borders: slate-800
+7.  placehold/background text: slate-500
+borders:
+1.  blocks: rounded-md
+2.  buttons: rounded-full
+3.  all borders: border-2
+other:
+1.  for buttons, use ALL CAPS
+
+
+TIMEZONES
+1.  when recieving a date or time field from API it will be in UTC
+    convert to Date object ASAP
+2.  get fields from Date object whenever you need to display a time, or use a field
+3.  before sending date or time fields to API, convert to UTC format
+    datetime field: ISOString
+    date field: YYYY-MM-DD
+    time field: HH:MM:SS
+4.  variables in local time will be named normally
+    variables in UTC will be named to indicate this; eg. timeField_UTC

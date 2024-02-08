@@ -49,6 +49,7 @@ export default function CreateTaskOverlay({
           })
           .then((response) => {
             calendarContext.setCalendarID(response.data.calendarID);
+            sessionStorage.setItem("activeCalendarName", response.data.name);
             closeOverlay();
             navigate("/weekly-view");
           });

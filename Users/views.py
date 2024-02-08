@@ -33,7 +33,7 @@ class Login(APIView):
 class Logout(APIView):
     permission_classes = [IsAuthenticated]
 
-    def delete(self, request):
+    def post(self, request):
         refresh = request.data.get('refreshToken')
         token = RefreshToken(refresh)
         token.blacklist()

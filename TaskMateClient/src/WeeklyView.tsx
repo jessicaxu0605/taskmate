@@ -2,7 +2,10 @@ import { useState, useContext, useEffect } from "react";
 import axios from "./config/axiosConfig";
 import { useNavigate } from "react-router";
 
-import { TIME_SLOT_HEIGHT } from "./utils/constants";
+import {
+  TIME_SLOT_HEIGHT,
+  WEEKLY_BOARD_MAX_HEIGHT_VH,
+} from "./utils/constants";
 import { DayHeader, DayBoard } from "./DayColumn";
 import { RightArrow, LeftArrow } from "./assets/SelectionArrows";
 import { rawTaskFormat, workingTaskFormat } from "./utils/globalTypes";
@@ -44,7 +47,7 @@ function WeekSelectorArrow({
   }
   return (
     <button
-      className="rounded-full bg-violet-700 h-8 w-8 flex flex-row justify-center items-center p-1"
+      className="rounded-full bg-violet-700 h-8 w-8 flex-row justify-center items-center p-1 inline-flex"
       onClick={handleClick}
     >
       {weekChangeDirection == 1 ? <RightArrow /> : <LeftArrow />}
@@ -191,29 +194,31 @@ export default function WeeklyView() {
 
   return (
     <>
-      <div className="flex flex-row justify-center align-middle pb-10 pt-2 px-8">
-        <WeekSelectorArrow
-          weekChangeDirection={-1}
-          shiftWeeksFunc={shiftWeeks}
-        />
-        <h2
-          style={{ width: "28rem" }}
-          className="text-xl text-slate-100 font-bold pt-2"
-        >
-          {weekDays[0]
-            ? `Week of ${DateToReadableDate(
-                weekDays[0]
-              )} – ${DateToReadableDate(weekDays[6])}`
-            : ""}
-        </h2>
-        <WeekSelectorArrow
-          weekChangeDirection={1}
-          shiftWeeksFunc={shiftWeeks}
-        />
+      <div className="flex flex-row justify-center items-baseline relative h-14 py-2">
+        <div>
+          <WeekSelectorArrow
+            weekChangeDirection={-1}
+            shiftWeeksFunc={shiftWeeks}
+          />
+          <h2
+            style={{ width: "24rem" }}
+            className="text-xl text-slate-100 font-semibold inline-block"
+          >
+            {weekDays[0]
+              ? `Week of ${DateToReadableDate(
+                  weekDays[0]
+                )} – ${DateToReadableDate(weekDays[6])}`
+              : ""}
+          </h2>
+          <WeekSelectorArrow
+            weekChangeDirection={1}
+            shiftWeeksFunc={shiftWeeks}
+          />
+        </div>
       </div>
       <div
         className="border-slate-200 border-2 rounded-md"
-        style={{ height: "75vh" }}
+        style={{ height: `${WEEKLY_BOARD_MAX_HEIGHT_VH}vh` }}
       >
         <div className={`grid grid-cols-8 overflow-y-scroll relative`}>
           <div key="empty"></div>
@@ -225,7 +230,7 @@ export default function WeeklyView() {
         </div>
         <hr />
         <div
-          style={{ height: "66vh" }}
+          style={{ height: `${WEEKLY_BOARD_MAX_HEIGHT_VH - 8}vh` }}
           className={`grid grid-cols-8 overflow-y-scroll relative`}
         >
           <GridBackground />

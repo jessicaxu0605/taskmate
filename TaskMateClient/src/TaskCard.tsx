@@ -121,6 +121,7 @@ export default function TaskCard({id, name, dueDateTime, duration, isScheduledDe
     return `${height}px`;
   }
 
+  // utility functions
   function DateToReadableDateTime(date: Date) {
     const dateFormatOptions: Intl.DateTimeFormatOptions = {
       year: "numeric",
@@ -135,6 +136,17 @@ export default function TaskCard({id, name, dueDateTime, duration, isScheduledDe
     const formattedDate = date.toLocaleString("en-US", dateFormatOptions);
     const formattedTime = date.toLocaleString("en-US", timeFormatOptions);
     return formattedDate + " at " + formattedTime;
+  }
+
+  function isScheduledBeforeDue() {
+    if (!taskData.startDateTime) return false;
+    const endDateTime = new Date (taskData.startDateTime);
+    const durationHours = parseInt(taskData.duration.slice(0, 2));
+    const durationMinutes = parseInt(taskData.duration.slice(3, 5));
+        endDateTime.setHours(endDateTime.getHours() + durationHours);
+    endDateTime.setMinutes(endDateTime.getMinutes() + durationMinutes);
+    if (endDateTime.getTime() <= taskData.dueDateTime.getTime()) return true;
+    else return false;
   }
 
   //Modify overlay functionality ------------------------------------------------------------------
@@ -191,12 +203,17 @@ export default function TaskCard({id, name, dueDateTime, duration, isScheduledDe
         bg-slate-700 br-10 text-left rounded-lg border-slate-600 border-2 z-10 cursor-grab overflow-hidden text-slate-100`}
       >
         <div className={`overflow-hidden`}>
-          <h3
-            style={isScheduled || isDragging ? { height: "100%" } : {}}
-            className="font-bold text-sm"
-          >
-            {taskData.name}
-          </h3>
+          <div className="flex flex-row justify-start">
+            {isScheduledBeforeDue() ? null : (
+              <h3 className="text-red-700 text-sm font-bold pr-1">*</h3>
+            )}
+            <h3
+              style={isScheduled || isDragging ? { height: "100%" } : {}}
+              className="font-bold text-sm"
+            >
+              {taskData.name}
+            </h3>
+          </div>
           <p
             style={isScheduled || isDragging ? { display: "none" } : {}}
             className="text-xs"
