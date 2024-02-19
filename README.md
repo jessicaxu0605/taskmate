@@ -11,8 +11,6 @@ Managing your to-do list has never been easier. TaskMate allows you to quickly a
 
 
 ## Note: 
-This is a WIP Project. Although core functionality has been implemented, there are some bugs to be worked out and additional features which will be developed soon. These include:
-* Ensuring consistency between the database in UTC and the user's local time zone
+This project is under continuing development. Although core functionality has been implemented, there are additional features which will be developed soon. These include:
 * Customization of Task properties by Calendar, and colour-coding of Tasks by property
 * Allow sharing of Calendars between users
-* Optimizing requests to API
